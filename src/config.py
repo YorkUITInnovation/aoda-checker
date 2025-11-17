@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     app_name: str = "AODA Compliance Checker"
     app_version: str = "1.0.0"
 
+    # Security
+    secret_key: str = "change-this-secret-key-in-production"  # Used for sessions and JWT
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_minutes: int = 480  # 8 hours
+
     # Timezone
     timezone: str = "America/Toronto"  # Timezone for timestamps (configurable via TZ or TIMEZONE env var)
 

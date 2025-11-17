@@ -7,17 +7,19 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.sessions import SessionMiddleware
 
 from src.models import ScanRequest, ScanResult
 from src.core import AccessibilityCrawler
 from src.config import settings
 from src.database import init_db, get_db
 from src.database.repository import ScanRepository
-from src.database.models import ScanStatus
+from src.database.models import ScanStatus, User
+from src.web.dependencies import get_current_user, get_current_active_user
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -50,6 +52,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add session middleware for cookie-based authentication
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,
+    session_cookie="aoda_session",
+    max_age=settings.jwt_expiration_minutes * 60,  # Convert minutes to seconds
+    same_site="lax",
+    https_only=False  # Set to True in production with HTTPS
+)
+
 # Setup templates
 templates = Jinja2Templates(directory="templates")
 
@@ -63,19 +75,23 @@ scan_results: Dict[str, ScanResult] = {}
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+async def index(request: Request, current_user: User = Depends(get_current_active_user)):
     """Render the main page."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "current_user": current_user
+    })
 
 
 @app.post("/api/scan")
 async def start_scan(
     scan_request: ScanRequest,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Start a new accessibility scan."""
-    logger.info(f"Starting scan for {scan_request.url}")
+    logger.info(f"Starting scan for {scan_request.url} by user {current_user.username}")
 
     # Create crawler and start scan in background
     crawler = AccessibilityCrawler(scan_request)
@@ -85,7 +101,7 @@ async def start_scan(
     scan_results[scan_id] = crawler.scan_result
 
     # Run scan in background
-    background_tasks.add_task(run_scan, crawler, scan_id)
+    background_tasks.add_task(run_scan, crawler, scan_id, current_user.id)
 
     return {
         "scan_id": scan_id,
@@ -94,7 +110,7 @@ async def start_scan(
     }
 
 
-async def run_scan(crawler: AccessibilityCrawler, scan_id: str):
+async def run_scan(crawler: AccessibilityCrawler, scan_id: str, user_id: int):
     """Run the scan and update results."""
     from src.database import get_db_session
     from src.database.repository import ScanRepository
@@ -108,7 +124,7 @@ async def run_scan(crawler: AccessibilityCrawler, scan_id: str):
         try:
             async with get_db_session() as db:
                 repo = ScanRepository(db)
-                await repo.create_scan(result)
+                await repo.create_scan(result, user_id)
                 logger.info(f"Scan {scan_id} saved to database")
         except Exception as db_error:
             logger.error(f"Failed to save scan {scan_id} to database: {db_error}")
@@ -129,13 +145,6 @@ async def run_scan(crawler: AccessibilityCrawler, scan_id: str):
             except Exception as db_error:
                 logger.error(f"Failed to update scan status in database: {db_error}")
 
-        logger.info(f"Scan {scan_id} completed")
-    except Exception as e:
-        logger.error(f"Scan {scan_id} failed: {str(e)}", exc_info=True)
-        if scan_id in scan_results:
-            scan_results[scan_id].status = "failed"
-            scan_results[scan_id].end_time = datetime.now()
-            scan_results[scan_id].error_message = str(e)
 
 
 @app.get("/api/scan/{scan_id}")
@@ -178,7 +187,12 @@ async def get_scan_results(scan_id: str):
 
 
 @app.get("/results/{scan_id}", response_class=HTMLResponse)
-async def results_page(request: Request, scan_id: str, db: AsyncSession = Depends(get_db)):
+async def results_page(
+    request: Request,
+    scan_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
     """Render the results page."""
     # Try to get from memory first
     result = scan_results.get(scan_id)
@@ -192,8 +206,14 @@ async def results_page(request: Request, scan_id: str, db: AsyncSession = Depend
             if not db_scan:
                 raise HTTPException(status_code=404, detail="Scan not found")
 
+            # Check if user has permission to view this scan
+            if not current_user.is_admin and db_scan.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied")
+
             # Convert database scan to ScanResult model
             result = db_scan.to_scan_result()
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Error loading scan from database: {e}")
             raise HTTPException(status_code=404, detail="Scan not found")
@@ -202,6 +222,7 @@ async def results_page(request: Request, scan_id: str, db: AsyncSession = Depend
         "results.html",
         {
             "request": request,
+            "current_user": current_user,
             "scan_result": result,
             "violations_by_impact": result.get_violations_by_impact()
         }
@@ -209,10 +230,21 @@ async def results_page(request: Request, scan_id: str, db: AsyncSession = Depend
 
 
 @app.get("/history", response_class=HTMLResponse)
-async def history_page(request: Request):
+async def history_page(request: Request, current_user: User = Depends(get_current_active_user)):
     """Render the scan history page."""
-    return templates.TemplateResponse("history.html", {"request": request})
+    return templates.TemplateResponse("history.html", {
+        "request": request,
+        "current_user": current_user
+    })
 
+
+# Include authentication routes
+from src.web.auth_routes import router as auth_router
+app.include_router(auth_router)
+
+# Include admin routes
+from src.web.admin_routes import router as admin_router
+app.include_router(admin_router)
 
 # Include history routes
 from src.web.history_routes import router as history_router

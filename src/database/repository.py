@@ -15,12 +15,13 @@ class ScanRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_scan(self, scan_result: ScanResult) -> Scan:
+    async def create_scan(self, scan_result: ScanResult, user_id: int) -> Scan:
         """Create a new scan record."""
         scan = Scan(
             scan_id=scan_result.scan_id,
             start_url=scan_result.start_url,
             status=ScanStatus(scan_result.status),
+            user_id=user_id,
             max_pages=scan_result.max_pages,
             max_depth=scan_result.max_depth,
             same_domain_only=1 if scan_result.same_domain_only else 0,
@@ -96,20 +97,45 @@ class ScanRepository:
         """Alias for get_scan_by_id for consistency."""
         return await self.get_scan_by_id(scan_id)
 
-    async def get_recent_scans(self, limit: int = 50) -> List[Scan]:
-        """Get recent scans ordered by start time."""
+    async def get_recent_scans(self, limit: int = 50, user_id: Optional[int] = None) -> List[Scan]:
+        """Get recent scans ordered by start time, optionally filtered by user."""
+        query = select(Scan).order_by(desc(Scan.start_time)).limit(limit)
+
+        if user_id is not None:
+            query = query.where(Scan.user_id == user_id)
+
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def get_scans_by_url(self, url: str, limit: int = 10, user_id: Optional[int] = None) -> List[Scan]:
+        """Get scans for a specific URL, optionally filtered by user."""
+        query = (
+            select(Scan)
+            .where(Scan.start_url == url)
+            .order_by(desc(Scan.start_time))
+            .limit(limit)
+        )
+
+        if user_id is not None:
+            query = query.where(Scan.user_id == user_id)
+
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def get_scans_by_user(self, user_id: int, limit: int = 50) -> List[Scan]:
+        """Get all scans for a specific user."""
         result = await self.session.execute(
             select(Scan)
+            .where(Scan.user_id == user_id)
             .order_by(desc(Scan.start_time))
             .limit(limit)
         )
         return list(result.scalars().all())
 
-    async def get_scans_by_url(self, url: str, limit: int = 10) -> List[Scan]:
-        """Get scans for a specific URL."""
+    async def get_all_scans(self, limit: int = 50) -> List[Scan]:
+        """Get all scans (admin only)."""
         result = await self.session.execute(
             select(Scan)
-            .where(Scan.start_url == url)
             .order_by(desc(Scan.start_time))
             .limit(limit)
         )

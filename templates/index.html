@@ -12,91 +12,45 @@
 
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
-            /* WCAG AA Compliant Color Overrides */
-            --bs-warning: #996600;  /* Darker yellow: 4.6:1 contrast on white */
+            /* WCAG AA Compliant Colors */
+            --bs-warning: #996600;
             --bs-warning-rgb: 153, 102, 0;
-            --bs-info: #0a7ea4;     /* Darker cyan: 4.5:1 contrast on white */
+            --bs-info: #0a7ea4;
             --bs-info-rgb: 10, 126, 164;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f8f9fa;
             min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: #0d6efd !important;
+        }
+
+        .main-content {
             padding: 2rem 0;
         }
 
-        .main-card {
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        .card {
+            border: 1px solid #dee2e6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        /* Override Bootstrap colors for WCAG AA compliance */
-        .text-warning {
-            color: #996600 !important;  /* 4.6:1 contrast ratio */
+        .card-header {
+            background-color: #ffffff;
+            border-bottom: 2px solid #0d6efd;
+            font-weight: 600;
         }
 
-        .bg-warning {
-            background-color: #996600 !important;
-            color: white !important;
-        }
-
-        .badge.bg-warning {
-            background-color: #996600 !important;
-            color: white !important;
-        }
-
-        .text-info {
-            color: #0a7ea4 !important;  /* 4.5:1 contrast ratio */
-        }
-
-        .bg-info {
-            background-color: #0a7ea4 !important;
-            color: white !important;
-        }
-
-        .gradient-btn {
-            background: var(--primary-gradient);
-            border: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            color: #ffffff;
-        }
-
-        .gradient-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-            background: var(--primary-gradient);
-            color: #ffffff;
-        }
-
-        .gradient-btn:active {
-            transform: translateY(0);
-        }
-
-        .gradient-btn:focus {
-            outline: 3px solid #ffc107;
-            outline-offset: 2px;
-        }
-
-        .stat-card {
-            border-left: 4px solid #667eea;
-            transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .feature-item::before {
-            content: "\f26b";
-            font-family: "bootstrap-icons";
-            color: #198754;
-            font-weight: bold;
-            margin-right: 0.5rem;
-        }
-
-        /* Accessibility: Skip to content link */
+        /* Accessibility: Skip link */
         .skip-link {
             position: absolute;
             top: -40px;
@@ -114,345 +68,377 @@
 
         /* Improved focus visibility */
         a:focus, button:focus, input:focus, select:focus, textarea:focus {
-            outline: 3px solid #ffc107;
+            outline: 3px solid #0d6efd;
             outline-offset: 2px;
+        }
+
+        .feature-item {
+            padding: 0.5rem 0;
+        }
+
+        .feature-item::before {
+            content: "\f26b";
+            font-family: "bootstrap-icons";
+            color: #198754;
+            font-weight: bold;
+            margin-right: 0.5rem;
         }
     </style>
 </head>
 <body>
-    <!-- Skip to main content link for keyboard users -->
+    <!-- Skip to main content link -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <div class="container py-4">
-        <div class="card main-card bg-white">
-            <div class="card-body p-4 p-md-5">
-                <!-- Header -->
-                <header class="text-center mb-4">
-                    <nav aria-label="Secondary navigation" class="d-flex justify-content-end mb-2">
-                        <a href="/history" class="btn btn-outline-primary btn-sm" aria-label="View scan history">
-                            <i class="bi bi-clock-history" aria-hidden="true"></i> View History
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-shield-check"></i> AODA Compliance Checker
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">
+                            <i class="bi bi-house-fill"></i> Home
                         </a>
-                    </nav>
-                    <h1 class="display-4 fw-bold text-dark mb-2">
-                        <i class="bi bi-search" aria-hidden="true"></i> AODA Compliance Checker
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history">
+                            <i class="bi bi-clock-history"></i> History
+                        </a>
+                    </li>
+                    {% if current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/users">
+                            <i class="bi bi-people-fill"></i> Users
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            Welcome, <strong>{{ current_user.username }}</strong>
+                            {% if current_user.is_admin %}
+                            <span class="badge bg-primary ms-1">Admin</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">
+                            <i class="bi bi-person-circle"></i> Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <main id="main-content">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold">
+                        <i class="bi bi-search"></i> Accessibility Scan
                     </h1>
                     <p class="lead text-muted">
                         Scan your website for WCAG 2.1 AA accessibility compliance
                     </p>
-                </header>
+                </div>
+            </div>
 
-                <!-- Scan Form -->
-                <main id="main-content">
-                <form id="scanForm" aria-label="Website accessibility scan form">
-                    <div class="mb-4">
-                        <label for="url" class="form-label fw-semibold">
-                            <i class="bi bi-link-45deg" aria-hidden="true"></i> Website URL
-                            <span class="text-danger" aria-label="required">*</span>
-                        </label>
-                        <input
-                            type="url"
-                            class="form-control form-control-lg"
-                            id="url"
-                            name="url"
-                            placeholder="https://example.com"
-                            required
-                            aria-required="true"
-                            aria-describedby="urlHelp"
-                        >
-                        <div id="urlHelp" class="form-text">
-                            Enter the full URL of the website you want to scan
+            <!-- Scan Form -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-link-45deg"></i> New Accessibility Scan
                         </div>
-                    </div>
+                        <div class="card-body">
+                            <form id="scanForm">
+                                <div class="mb-3">
+                                    <label for="url" class="form-label fw-semibold">
+                                        Website URL <span class="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="url"
+                                        class="form-control"
+                                        id="url"
+                                        name="url"
+                                        placeholder="https://example.com"
+                                        required
+                                        autofocus
+                                    >
+                                    <div class="form-text">Enter the full URL including http:// or https://</div>
+                                </div>
 
-                    <fieldset class="row g-3 mb-4">
-                        <legend class="h6 fw-semibold">Scan Configuration</legend>
-                        <div class="col-md-6">
-                            <label for="maxPages" class="form-label fw-semibold">
-                                <i class="bi bi-files" aria-hidden="true"></i> Max Pages
-                            </label>
-                            <input
-                                type="number"
-                                class="form-control"
-                                id="maxPages"
-                                name="max_pages"
-                                value="50"
-                                min="1"
-                                max="500"
-                                aria-describedby="maxPagesHelp"
-                            >
-                            <div id="maxPagesHelp" class="form-text">Maximum pages to scan (1-500)</div>
-                        </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="maxPages" class="form-label fw-semibold">
+                                            Max Pages to Scan
+                                        </label>
+                                        <input
+                                            type="number"
+                                            class="form-control"
+                                            id="maxPages"
+                                            name="maxPages"
+                                            value="50"
+                                            min="1"
+                                            max="500"
+                                        >
+                                        <div class="form-text">Maximum number of pages to analyze</div>
+                                    </div>
 
-                        <div class="col-md-6">
-                            <label for="maxDepth" class="form-label fw-semibold">
-                                <i class="bi bi-diagram-3" aria-hidden="true"></i> Max Depth
-                            </label>
-                            <input
-                                type="number"
-                                class="form-control"
-                                id="maxDepth"
-                                name="max_depth"
-                                value="3"
-                                min="1"
-                                max="10"
-                                aria-describedby="maxDepthHelp"
-                            >
-                            <div id="maxDepthHelp" class="form-text">How deep to crawl (1-10)</div>
-                        </div>
-                    </fieldset>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="maxDepth" class="form-label fw-semibold">
+                                            Max Depth
+                                        </label>
+                                        <input
+                                            type="number"
+                                            class="form-control"
+                                            id="maxDepth"
+                                            name="maxDepth"
+                                            value="3"
+                                            min="1"
+                                            max="10"
+                                        >
+                                        <div class="form-text">How deep to crawl from the start page</div>
+                                    </div>
+                                </div>
 
-                    <fieldset class="mb-4">
-                        <legend class="h6 fw-semibold">Crawling Options</legend>
-                        <div class="form-check mb-2">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="sameDomainOnly"
-                                name="same_domain_only"
-                                checked
-                            >
-                            <label class="form-check-label" for="sameDomainOnly">
-                                Only scan pages from the same domain
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="restrictToPath"
-                                name="restrict_to_path"
-                                checked
-                                aria-describedby="restrictPathHelp"
-                            >
-                            <label class="form-check-label" for="restrictToPath">
-                                Only scan pages within the starting URL's path
-                            </label>
-                            <div id="restrictPathHelp" class="form-text">
-                                Example: Starting at https://example.com/services will only scan URLs under /services
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            id="restrictPath"
+                                            name="restrictPath"
+                                            checked
+                                        >
+                                        <label class="form-check-label" for="restrictPath">
+                                            Only scan pages within the starting URL path
+                                        </label>
+                                    </div>
+                                    <div class="form-text ms-4">
+                                        Example: Starting at https://example.com/blog will only scan /blog pages
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input"
+                                            id="enableScreenshots"
+                                            name="enableScreenshots"
+                                        >
+                                        <label class="form-check-label" for="enableScreenshots">
+                                            Capture screenshots (slower scanning)
+                                        </label>
+                                    </div>
+                                    <div class="form-text ms-4">
+                                        ⚠️ Warning: Enabling screenshots will significantly increase scan time
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-outline-primary btn-lg" id="scanButton">
+                                        <i class="bi bi-play-fill"></i> Start Accessibility Scan
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- Progress Section -->
+                            <div id="progressSection" class="mt-4" style="display: none;">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                <span class="visually-hidden">Scanning...</span>
+                                            </div>
+                                            <strong>Scan in Progress</strong>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-6">
+                                                <div class="card bg-light">
+                                                    <div class="card-body text-center">
+                                                        <div class="display-4 fw-bold text-primary" id="pagesScanned">0</div>
+                                                        <div class="text-muted">Pages Scanned</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="card bg-light">
+                                                    <div class="card-body text-center">
+                                                        <div class="display-4 fw-bold text-danger" id="issuesFound">0</div>
+                                                        <div class="text-muted">Issues Found</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="progressText" class="text-center mb-2">
+                                            <strong>Initializing scan...</strong>
+                                        </div>
+                                        <div class="progress" style="height: 25px;">
+                                            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                                 role="progressbar" style="width: 0%">
+                                                <span id="progressPercent">0%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </fieldset>
-
-                    <fieldset class="mb-4">
-                        <legend class="h6 fw-semibold">Advanced Options</legend>
-                        <div class="form-check">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                id="enableScreenshots"
-                                name="enable_screenshots"
-                                aria-describedby="screenshotsHelp"
-                            >
-                            <label class="form-check-label" for="enableScreenshots">
-                                <i class="bi bi-camera" aria-hidden="true"></i> Capture screenshots of violations
-                            </label>
-                            <div id="screenshotsHelp" class="form-text">
-                                <i class="bi bi-exclamation-triangle text-warning" aria-hidden="true"></i>
-                                <strong>Performance Warning:</strong> Enabling screenshots will significantly slow down the scan.
-                                A typical 3-page scan may take <strong>5-8 minutes</strong> instead of 30-60 seconds.
-                                Only enable if you need visual evidence of violations.
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <button type="submit" class="btn btn-primary btn-lg w-100 gradient-btn" id="submitBtn" aria-describedby="submitBtnHelp">
-                        <i class="bi bi-play-circle" aria-hidden="true"></i> Start Accessibility Scan
-                    </button>
-                </form>
-
-                <!-- Status Display with ARIA live region -->
-                <div id="status" class="mt-4" style="display: none;" role="status" aria-live="polite" aria-atomic="true"></div>
-
-                <!-- Features List -->
-                <aside aria-labelledby="features-heading">
-                <div class="card bg-light mt-4">
-                    <div class="card-body">
-                        <h2 id="features-heading" class="card-title h5 fw-bold mb-3">
-                            <i class="bi bi-check2-circle" aria-hidden="true"></i> What We Check
-                        </h2>
-                        <ul class="list-unstyled mb-0">
-                            <li class="feature-item py-1">WCAG 2.1 Level AA compliance</li>
-                            <li class="feature-item py-1">Color contrast ratios</li>
-                            <li class="feature-item py-1">Keyboard navigation</li>
-                            <li class="feature-item py-1">Screen reader compatibility</li>
-                            <li class="feature-item py-1">Image alt text</li>
-                            <li class="feature-item py-1">Form labels and ARIA attributes</li>
-                            <li class="feature-item py-1">Heading structure and landmarks</li>
-                            <li class="feature-item py-1">And 90+ other accessibility rules</li>
-                        </ul>
                     </div>
                 </div>
-                </aside>
-                </main>
+
+                <!-- Information Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <i class="bi bi-info-circle"></i> About This Tool
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                This tool automatically scans websites for WCAG 2.1 Level AA accessibility compliance issues.
+                            </p>
+                            <h6 class="fw-semibold">What we check:</h6>
+                            <ul class="list-unstyled small">
+                                <li class="feature-item">Color contrast</li>
+                                <li class="feature-item">Keyboard navigation</li>
+                                <li class="feature-item">Screen reader compatibility</li>
+                                <li class="feature-item">Form labels and errors</li>
+                                <li class="feature-item">Image alt text</li>
+                                <li class="feature-item">Heading structure</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-lightbulb"></i> Tips
+                        </div>
+                        <div class="card-body">
+                            <ul class="small mb-0">
+                                <li class="mb-2">Start with a smaller number of pages for faster results</li>
+                                <li class="mb-2">Use path restriction for focused scans of specific sections</li>
+                                <li class="mb-2">Disable screenshots for faster scanning</li>
+                                <li>Check the history page to view previous scans</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
+    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-
     <script>
-        const form = document.getElementById('scanForm');
-        const statusDiv = document.getElementById('status');
-        const submitBtn = document.getElementById('submitBtn');
+        const scanForm = document.getElementById('scanForm');
+        const scanButton = document.getElementById('scanButton');
+        const progressSection = document.getElementById('progressSection');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressPercent = document.getElementById('progressPercent');
+        const pagesScanned = document.getElementById('pagesScanned');
+        const issuesFound = document.getElementById('issuesFound');
 
-        let scanId = null;
-        let pollInterval = null;
-
-        form.addEventListener('submit', async (e) => {
+        scanForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const formData = {
                 url: document.getElementById('url').value,
                 max_pages: parseInt(document.getElementById('maxPages').value),
                 max_depth: parseInt(document.getElementById('maxDepth').value),
-                same_domain_only: document.getElementById('sameDomainOnly').checked,
-                restrict_to_path: document.getElementById('restrictToPath').checked,
+                same_domain_only: true,
+                restrict_to_path: document.getElementById('restrictPath').checked,
                 enable_screenshots: document.getElementById('enableScreenshots').checked
             };
 
-            try {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Starting scan...';
-                showStatus('Starting accessibility scan...', 'info');
+            // Disable form
+            scanButton.disabled = true;
+            progressSection.style.display = 'block';
+            progressText.innerHTML = '<strong>Starting scan...</strong>';
+            progressBar.style.width = '10%';
+            progressPercent.textContent = '10%';
+            pagesScanned.textContent = '0';
+            issuesFound.textContent = '0';
 
+            try {
                 const response = await fetch('/api/scan', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(formData)
                 });
 
                 const data = await response.json();
-                scanId = data.scan_id;
 
-                // Start polling for status
-                pollInterval = setInterval(checkStatus, 2000);
-
+                if (data.scan_id) {
+                    progressText.innerHTML = '<strong>Scan started successfully!</strong> Analyzing pages...';
+                    progressBar.style.width = '30%';
+                    progressPercent.textContent = '30%';
+                    pollScanStatus(data.scan_id);
+                } else {
+                    throw new Error('No scan ID received');
+                }
             } catch (error) {
-                showStatus('Error starting scan: ' + error.message, 'danger');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="bi bi-play-circle"></i> Start Accessibility Scan';
+                console.error('Error starting scan:', error);
+                alert('Failed to start scan. Please try again.');
+                scanButton.disabled = false;
+                progressSection.style.display = 'none';
             }
         });
 
-        async function checkStatus() {
-            if (!scanId) return;
+        async function pollScanStatus(scanId) {
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/scan/${scanId}`);
+                    const data = await response.json();
 
-            try {
-                const response = await fetch(`/api/scan/${scanId}`);
-                const data = await response.json();
+                    // Update stat blocks
+                    pagesScanned.textContent = data.pages_scanned || 0;
+                    issuesFound.textContent = data.total_violations || 0;
 
-                if (data.status === 'completed') {
-                    clearInterval(pollInterval);
-                    showSuccess(data);
-                } else if (data.status === 'failed') {
-                    clearInterval(pollInterval);
-                    const errorMsg = data.error_message || 'Unknown error occurred';
-                    showStatus(`<strong>Scan failed:</strong> ${errorMsg}`, 'danger');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="bi bi-play-circle"></i> Start Accessibility Scan';
-                } else {
-                    showProgress(data);
+                    // Update progress bar
+                    const progress = Math.min(30 + (data.pages_scanned * 3), 90);
+                    progressBar.style.width = `${progress}%`;
+                    progressPercent.textContent = `${progress}%`;
+
+                    // Update status text
+                    progressText.innerHTML = `<strong>Scanning:</strong> ${data.pages_scanned} pages analyzed, ${data.total_violations} issues found`;
+
+                    if (data.status === 'completed') {
+                        clearInterval(pollInterval);
+                        progressBar.style.width = '100%';
+                        progressPercent.textContent = '100%';
+                        progressText.innerHTML = '<strong class="text-success">✓ Scan complete!</strong> Redirecting to results...';
+                        setTimeout(() => {
+                            window.location.href = `/results/${scanId}`;
+                        }, 1500);
+                    } else if (data.status === 'failed') {
+                        clearInterval(pollInterval);
+                        alert('Scan failed: ' + (data.error_message || 'Unknown error'));
+                        scanButton.disabled = false;
+                        progressSection.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error polling status:', error);
                 }
-            } catch (error) {
-                clearInterval(pollInterval);
-                showStatus('Error checking status: ' + error.message, 'danger');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="bi bi-play-circle"></i> Start Accessibility Scan';
-            }
-        }
-
-        function showStatus(message, type) {
-            statusDiv.className = `alert alert-${type} border-start border-4`;
-            statusDiv.style.display = 'block';
-            statusDiv.innerHTML = message;
-        }
-
-        function showProgress(data) {
-            const message = `
-                <div class="d-flex align-items-center mb-3">
-                    <div class="spinner-border text-primary me-3" role="status">
-                        <span class="visually-hidden">Scanning in progress</span>
-                    </div>
-                    <strong>Scanning in progress...</strong>
-                </div>
-                <div class="row g-3">
-                    <div class="col-6">
-                        <div class="card stat-card">
-                            <div class="card-body">
-                                <div class="text-muted small">Pages Scanned</div>
-                                <div class="fs-2 fw-bold text-dark" aria-label="${data.pages_scanned} pages scanned">${data.pages_scanned}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="card stat-card">
-                            <div class="card-body">
-                                <div class="text-muted small">Violations Found</div>
-                                <div class="fs-2 fw-bold text-dark" aria-label="${data.total_violations} violations found">${data.total_violations}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            showStatus(message, 'info');
-        }
-
-        function showSuccess(data) {
-            const critical = data.violations_by_impact.critical;
-            const serious = data.violations_by_impact.serious;
-            const moderate = data.violations_by_impact.moderate;
-            const minor = data.violations_by_impact.minor;
-
-            const message = `
-                <div class="d-flex align-items-center mb-3">
-                    <i class="bi bi-check-circle-fill text-success fs-3 me-2" aria-hidden="true"></i>
-                    <strong class="fs-5">Scan completed!</strong>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card">
-                            <div class="card-body">
-                                <div class="text-muted small">Pages Scanned</div>
-                                <div class="fs-4 fw-bold text-dark" aria-label="${data.pages_scanned} pages scanned">${data.pages_scanned}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card">
-                            <div class="card-body">
-                                <div class="text-muted small">Total Violations</div>
-                                <div class="fs-4 fw-bold text-dark" aria-label="${data.total_violations} total violations">${data.total_violations}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card border-danger">
-                            <div class="card-body">
-                                <div class="text-muted small">Critical</div>
-                                <div class="fs-4 fw-bold text-danger" aria-label="${critical} critical violations">${critical}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card stat-card border-warning">
-                            <div class="card-body">
-                                <div class="small text-muted">Serious</div>
-                                <div class="fs-4 fw-bold text-warning" aria-label="${serious} serious violations">${serious}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <a href="/results/${scanId}" class="btn btn-lg btn-primary w-100 gradient-btn" aria-label="View detailed scan results">
-                    <i class="bi bi-bar-chart-fill" aria-hidden="true"></i> View Detailed Results
-                </a>
-            `;
-            showStatus(message, 'success');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="bi bi-play-circle" aria-hidden="true"></i> Start Accessibility Scan';
+            }, 2000);
         }
     </script>
 </body>

@@ -1,7 +1,7 @@
 """Database models and ORM configuration."""
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, JSON, ForeignKey, Enum
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, JSON, ForeignKey, Enum, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -18,6 +18,33 @@ class ScanStatus(str, enum.Enum):
     FAILED = "failed"
 
 
+class User(Base):
+    """User model for authentication."""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(255), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=True)
+    is_admin = Column(Boolean, default=False, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Authentication method (for future extensibility)
+    auth_method = Column(String(50), default="manual", nullable=False)  # manual, saml, oauth, ldap, etc.
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
+
+    # Relationships
+    scans = relationship("Scan", back_populates="user", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<User(username={self.username}, is_admin={self.is_admin})>"
+
+
 class Scan(Base):
     """Scan record in database."""
     __tablename__ = "scans"
@@ -26,6 +53,9 @@ class Scan(Base):
     scan_id = Column(String(36), unique=True, index=True, nullable=False)
     start_url = Column(String(2048), nullable=False)
     status = Column(Enum(ScanStatus), default=ScanStatus.PENDING, nullable=False)
+
+    # User association
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     # Configuration
     max_pages = Column(Integer, nullable=False)
@@ -45,6 +75,7 @@ class Scan(Base):
     error_message = Column(Text, nullable=True)
 
     # Relationships
+    user = relationship("User", back_populates="scans")
     pages = relationship("PageScan", back_populates="scan", cascade="all, delete-orphan")
 
     def __repr__(self):

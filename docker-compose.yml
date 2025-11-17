@@ -43,6 +43,10 @@ services:
       - DATABASE_ECHO=false
       - DB_POOL_SIZE=10
       - DB_MAX_OVERFLOW=20
+      # Authentication configuration
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRATION_MINUTES=480
     depends_on:
       mysql:
         condition: service_healthy

@@ -6,6 +6,7 @@ An automated AODA/WCAG AA compliance checker that crawls websites and generates 
 
 ## Features
 
+- ✅ **User Authentication & Management** - Secure login, user roles, admin panel
 - ✅ Crawl websites and analyze accessibility
 - ✅ WCAG 2.1 AA compliance testing using axe-core
 - ✅ **Path restriction for focused scanning** (scan only specific sections like `/uit`)
@@ -14,6 +15,7 @@ An automated AODA/WCAG AA compliance checker that crawls websites and generates 
 - ✅ PDF report generation
 - ✅ Throttling for large sites
 - ✅ MySQL 8.4 database integration for scan history
+- ✅ **Scan ownership and history filtering**
 - ✅ Docker deployment with docker compose
 
 ## Installation
@@ -62,6 +64,35 @@ docker compose logs -f
    # Initialize tables
    python scripts/init_db.py
    ```
+
+6. **Setup Authentication** (Required):
+   ```bash
+   # Install dependencies and create admin user
+   ./setup_auth.sh
+   
+   # Or manually:
+   pip install -r requirements.txt
+   python3 init_auth.py
+   ```
+   
+   Default admin credentials:
+   - Username: `admin`
+   - Password: `admin123`
+   
+   ⚠️ **Change the password after first login!**
+
+## Authentication System
+
+The application now includes a comprehensive authentication system:
+
+- **User Login/Logout**: Secure session-based authentication
+- **User Management**: Admin panel to create, edit, delete users
+- **Role-Based Access**: Admin and regular user permissions
+- **Scan Ownership**: Users can only view/delete their own scans
+- **Admin Features**: View all scans, filter by user, manage users
+
+📚 **Quick Start**: See [QUICKSTART_AUTH.md](QUICKSTART_AUTH.md)  
+📖 **Full Documentation**: See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)
 
 ## Usage
 
