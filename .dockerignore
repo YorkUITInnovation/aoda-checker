@@ -1,0 +1,31 @@
+# Docker ignore file
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.git
+.gitignore
+.DS_Store
+*.log
+.pytest_cache
+.coverage
+htmlcov
+.idea
+.vscode
+*.md
+!README.md
+reports/*.pdf
+server.log
+server.pid
+test_*.py
+
+# Exclude MySQL data directory (created by docker compose)
+mysql/
+

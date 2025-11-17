@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan History - AODA Compliance Checker</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+            /* WCAG AA Compliant Color Overrides */
+            --bs-warning: #996600;  /* Darker yellow: 4.6:1 contrast on white */
+            --bs-warning-rgb: 153, 102, 0;
+            --bs-info: #0a7ea4;     /* Darker cyan: 4.5:1 contrast on white */
+            --bs-info-rgb: 10, 126, 164;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .main-card {
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Override Bootstrap colors for WCAG AA compliance */
+        .text-warning {
+            color: #996600 !important;  /* 4.6:1 contrast ratio */
+        }
+
+        .bg-warning {
+            background-color: #996600 !important;
+            color: white !important;
+        }
+
+        .badge.bg-warning {
+            background-color: #996600 !important;
+            color: white !important;
+        }
+
+        .text-info {
+            color: #0a7ea4 !important;  /* 4.5:1 contrast ratio */
+        }
+
+        .bg-info {
+            background-color: #0a7ea4 !important;
+            color: white !important;
+        }
+
+        .gradient-btn {
+            background: var(--primary-gradient);
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+
+        .gradient-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .scan-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #667eea;
+        }
+
+        .scan-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.75rem;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+
+        /* Accessibility: Skip to content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #000;
+            color: #fff;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Improved focus visibility */
+        a:focus, button:focus, input:focus, select:focus {
+            outline: 3px solid #ffc107;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip to main content link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="container py-4">
+        <div class="card main-card bg-white">
+            <div class="card-body p-4 p-md-5">
+                <!-- Header -->
+                <header class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="display-5 fw-bold text-dark mb-2">
+                            <i class="bi bi-clock-history" aria-hidden="true"></i> Scan History
+                        </h1>
+                        <p class="text-muted mb-0">View and access your previous accessibility scans</p>
+                    </div>
+                    <a href="/" class="btn btn-outline-primary" aria-label="Create new scan">
+                        <i class="bi bi-plus-circle" aria-hidden="true"></i> New Scan
+                    </a>
+                </header>
+
+                <!-- Statistics -->
+                <section id="statistics" class="row g-3 mb-4" aria-label="Scan statistics">
+                    <!-- Statistics will be loaded here -->
+                </section>
+
+                <!-- Search and Filter -->
+                <section aria-label="Search and filter scans" class="row mb-4">
+                    <div class="col-md-8">
+                        <label for="searchInput" class="visually-hidden">Search scans by URL</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                            </span>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="searchInput"
+                                placeholder="Search by URL..."
+                                aria-label="Search scans by URL"
+                            >
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="statusFilter" class="visually-hidden">Filter by status</label>
+                        <select class="form-select" id="statusFilter" aria-label="Filter scans by status">
+                            <option value="">All Statuses</option>
+                            <option value="completed">Completed</option>
+                            <option value="running">Running</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- Scan History List -->
+                <main id="main-content" aria-label="Scan history">
+                <div id="scanList" role="region" aria-live="polite" aria-atomic="false">
+                    <!-- Loading spinner -->
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading scan history...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading scan history...</p>
+                    </div>
+                </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2"><strong>Are you sure you want to delete this scan?</strong></p>
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-link-45deg" aria-hidden="true"></i>
+                        <span id="deleteUrl" class="text-break"></span>
+                    </p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                        <strong>Warning:</strong> This action cannot be undone. All scan data, including violations and page results, will be permanently deleted.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle" aria-hidden="true"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="deleteScan()">
+                        <i class="bi bi-trash" aria-hidden="true"></i> Delete Scan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let allScans = [];
+        let deleteTargetId = null;
+        let deleteModal = null;
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/history/statistics');
+                const stats = await response.json();
+
+                const statsHtml = `
+                    <div class="col-md-4">
+                        <div class="stat-box">
+                            <div class="stat-number">${stats.total_scans}</div>
+                            <div class="stat-label">Total Scans</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-box">
+                            <div class="stat-number">${stats.scans_by_status.completed || 0}</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-box">
+                            <div class="stat-number">${stats.total_violations.toLocaleString()}</div>
+                            <div class="stat-label">Total Violations</div>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('statistics').innerHTML = statsHtml;
+            } catch (error) {
+                console.error('Failed to load statistics:', error);
+            }
+        }
+
+        // Load scan history
+        async function loadScans() {
+            try {
+                const response = await fetch('/api/history/scans?limit=100');
+                allScans = await response.json();
+                displayScans(allScans);
+            } catch (error) {
+                console.error('Failed to load scans:', error);
+                document.getElementById('scanList').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Failed to load scan history. Please try refreshing the page.
+                    </div>
+                `;
+            }
+        }
+
+        // Display scans
+        function displayScans(scans) {
+            const scanList = document.getElementById('scanList');
+
+            if (scans.length === 0) {
+                scanList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h3 class="mt-3">No scans found</h3>
+                        <p>Start your first accessibility scan to see results here.</p>
+                        <a href="/" class="btn btn-primary gradient-btn mt-3">
+                            <i class="bi bi-plus-circle"></i> Create New Scan
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            scans.forEach(scan => {
+                const statusColors = {
+                    'completed': 'success',
+                    'running': 'primary',
+                    'failed': 'danger'
+                };
+                const statusColor = statusColors[scan.status] || 'secondary';
+
+                const startDate = new Date(scan.start_time);
+                const formattedDate = startDate.toLocaleString();
+                const timeAgo = getTimeAgo(startDate);
+
+                html += `
+                    <div class="card scan-card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h5 class="card-title mb-2">
+                                        <i class="bi bi-link-45deg"></i>
+                                        <a href="${scan.start_url}" target="_blank" class="text-decoration-none">
+                                            ${truncateUrl(scan.start_url, 60)}
+                                        </a>
+                                    </h5>
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-clock"></i> ${formattedDate}
+                                        <span class="text-secondary ms-2">(${timeAgo})</span>
+                                    </p>
+                                    <p class="text-muted small mb-0 mt-1">
+                                        <i class="bi bi-gear"></i>
+                                        Max Pages: ${scan.max_pages || 'N/A'} |
+                                        Max Depth: ${scan.max_depth || 'N/A'}
+                                    </p>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="d-flex gap-3 justify-content-md-center mt-2 mt-md-0">
+                                        <div>
+                                            <div class="fw-bold">${scan.pages_scanned}</div>
+                                            <div class="small text-muted">Pages</div>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-${scan.total_violations > 0 ? 'danger' : 'success'}">
+                                                ${scan.total_violations}
+                                            </div>
+                                            <div class="small text-muted">Issues</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-md-end mt-3 mt-md-0">
+                                    <span class="badge bg-${statusColor} status-badge mb-2 d-block d-md-inline-block">
+                                        ${scan.status.toUpperCase()}
+                                    </span>
+                                    <br class="d-none d-md-inline">
+                                    <div class="btn-group mt-2" role="group" aria-label="Scan actions">
+                                        ${scan.status === 'completed' ? `
+                                            <a href="/results/${scan.scan_id}" class="btn btn-sm btn-outline-primary" aria-label="View results for ${truncateUrl(scan.start_url, 30)}">
+                                                <i class="bi bi-eye" aria-hidden="true"></i> View
+                                            </a>
+                                        ` : scan.status === 'running' ? `
+                                            <a href="/results/${scan.scan_id}" class="btn btn-sm btn-outline-primary" aria-label="Check status for ${truncateUrl(scan.start_url, 30)}">
+                                                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Status
+                                            </a>
+                                        ` : `
+                                            <button class="btn btn-sm btn-outline-secondary" disabled aria-label="Scan failed">
+                                                <i class="bi bi-x-circle" aria-hidden="true"></i> Failed
+                                            </button>
+                                        `}
+                                        <button
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmDelete('${scan.scan_id}', '${scan.start_url.replace(/'/g, "\\'")}')"
+                                            aria-label="Delete scan for ${truncateUrl(scan.start_url, 30)}">
+                                            <i class="bi bi-trash" aria-hidden="true"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            scanList.innerHTML = html;
+        }
+
+        // Truncate URL for display
+        function truncateUrl(url, maxLength) {
+            if (url.length <= maxLength) return url;
+            return url.substring(0, maxLength) + '...';
+        }
+
+        // Get time ago string
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+
+            const intervals = {
+                year: 31536000,
+                month: 2592000,
+                week: 604800,
+                day: 86400,
+                hour: 3600,
+                minute: 60
+            };
+
+            for (let [name, secondsInInterval] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInInterval);
+                if (interval >= 1) {
+                    return interval === 1 ? `1 ${name} ago` : `${interval} ${name}s ago`;
+                }
+            }
+
+            return 'Just now';
+        }
+
+        // Filter scans
+        function filterScans() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const filteredScans = allScans.filter(scan => {
+                const matchesSearch = scan.start_url.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || scan.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            displayScans(filteredScans);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterScans);
+        document.getElementById('statusFilter').addEventListener('change', filterScans);
+
+        // Delete confirmation
+        function confirmDelete(scanId, scanUrl) {
+            deleteTargetId = scanId;
+            document.getElementById('deleteUrl').textContent = scanUrl;
+
+            // Show modal
+            if (!deleteModal) {
+                deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            }
+            deleteModal.show();
+        }
+
+        // Delete scan
+        async function deleteScan() {
+            if (!deleteTargetId) return;
+
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+            const originalText = deleteBtn.innerHTML;
+
+            try {
+                // Disable button and show loading
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+
+                const response = await fetch(`/api/history/scans/${deleteTargetId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete scan');
+                }
+
+                // Close modal
+                deleteModal.hide();
+
+                // Show success message
+                showNotification('success', 'Scan deleted successfully');
+
+                // Reload scans and statistics
+                await loadScans();
+                await loadStatistics();
+
+            } catch (error) {
+                console.error('Error deleting scan:', error);
+                showNotification('danger', 'Failed to delete scan. Please try again.');
+            } finally {
+                // Reset button
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalText;
+                deleteTargetId = null;
+            }
+        }
+
+        // Show notification
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            notification.style.zIndex = '9999';
+            notification.setAttribute('role', 'alert');
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStatistics();
+            loadScans();
+
+            // Auto-refresh every 30 seconds if there are running scans
+            setInterval(() => {
+                if (allScans.some(scan => scan.status === 'running')) {
+                    loadScans();
+                    loadStatistics();
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>
+
