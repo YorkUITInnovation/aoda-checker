@@ -33,6 +33,7 @@ class AccessibilityCrawler:
         self.same_domain_only = scan_request.same_domain_only
         self.restrict_to_path = scan_request.restrict_to_path
         self.enable_screenshots = scan_request.enable_screenshots
+        self.scan_mode = scan_request.scan_mode.value  # Convert enum to string
 
         self.visited_urls: Set[str] = set()
 
@@ -52,13 +53,15 @@ class AccessibilityCrawler:
             max_pages=self.max_pages,
             max_depth=self.max_depth,
             same_domain_only=self.same_domain_only,
-            restrict_to_path=self.restrict_to_path
+            restrict_to_path=self.restrict_to_path,
+            scan_mode=self.scan_mode
         )
 
     async def crawl(self) -> ScanResult:
         """Crawl the website and test for accessibility."""
         logger.info(f"Starting crawl of {self.start_url}")
         logger.info(f"Configuration: max_pages={self.max_pages}, max_depth={self.max_depth}, same_domain_only={self.same_domain_only}, restrict_to_path={self.restrict_to_path}")
+        logger.info(f"Scan mode: {self.scan_mode.upper()} ({'WCAG 2.1 Level AA' if self.scan_mode == 'wcag21' else 'Ontario AODA/IASR (WCAG 2.0 Level AA)'})")
         logger.info(f"Performance: request_delay={settings.request_delay}s, timeout={settings.timeout}ms, screenshots={'enabled' if self.enable_screenshots else 'disabled'}")
         logger.info(f"Domain: {self.domain}")
         if self.restrict_to_path:
@@ -140,9 +143,11 @@ class AccessibilityCrawler:
             # Get page content for link extraction
             page_content = await page.content()
 
-            # Run axe accessibility tests
+            # Run axe accessibility tests with appropriate configuration
+            from src.utils.aoda_requirements import get_axe_config_for_scan_mode
             axe = Axe()
-            axe_results = await axe.run(page)
+            axe_config = get_axe_config_for_scan_mode(self.scan_mode)
+            axe_results = await axe.run(page, options=axe_config)
 
             # Convert AxeResults object to dictionary
             if hasattr(axe_results, 'response'):

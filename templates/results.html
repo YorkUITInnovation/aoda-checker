@@ -198,6 +198,14 @@
                                 <i class="bi bi-calendar-check"></i> {{ scan_result.start_time.strftime('%Y-%m-%d %H:%M:%S') }}
                                 | <i class="bi bi-stopwatch"></i> {{ "%.2f"|format(scan_result.duration or 0) }}s
                             </p>
+                            <p class="text-muted small mb-0">
+                                <i class="bi bi-shield-check"></i>
+                                {% if scan_result.scan_mode == 'aoda' %}
+                                    <strong>Ontario AODA/IASR</strong> (WCAG 2.0 Level AA)
+                                {% else %}
+                                    <strong>WCAG 2.1 Level AA</strong>
+                                {% endif %}
+                            </p>
                         </div>
                         <div>
                             <a href="/" class="btn btn-outline-primary me-2">

@@ -61,6 +61,7 @@ class Scan(Base):
     max_pages = Column(Integer, nullable=False)
     max_depth = Column(Integer, nullable=False)
     same_domain_only = Column(Integer, nullable=False)  # MySQL doesn't have native boolean
+    scan_mode = Column(String(20), nullable=False, default="aoda")  # 'aoda' or 'wcag21'
 
     # Results
     pages_scanned = Column(Integer, default=0)
@@ -138,7 +139,8 @@ class Scan(Base):
             max_pages=self.max_pages,
             max_depth=self.max_depth,
             same_domain_only=bool(self.same_domain_only),
-            restrict_to_path=True  # Default, not stored in DB yet
+            restrict_to_path=True,  # Default, not stored in DB yet
+            scan_mode=self.scan_mode if hasattr(self, 'scan_mode') else 'aoda'
         )
 
 

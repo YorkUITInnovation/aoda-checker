@@ -25,6 +25,7 @@ class ScanRepository:
             max_pages=scan_result.max_pages,
             max_depth=scan_result.max_depth,
             same_domain_only=1 if scan_result.same_domain_only else 0,
+            scan_mode=scan_result.scan_mode,
             pages_scanned=scan_result.pages_scanned,
             pages_with_violations=scan_result.pages_with_violations,
             total_violations=scan_result.total_violations,

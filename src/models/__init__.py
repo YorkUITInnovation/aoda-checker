@@ -47,6 +47,12 @@ class PageResult(BaseModel):
         return self.violation_count > 0
 
 
+class ScanMode(str, Enum):
+    """Scan mode for accessibility testing."""
+    WCAG21 = "wcag21"  # Full WCAG 2.1 Level AA
+    AODA = "aoda"  # Ontario AODA/IASR requirements (WCAG 2.0 Level AA)
+
+
 class ScanRequest(BaseModel):
     """Model for a scan request."""
     url: HttpUrl
@@ -55,6 +61,7 @@ class ScanRequest(BaseModel):
     same_domain_only: bool = True
     restrict_to_path: bool = True
     enable_screenshots: bool = False  # Default to disabled for performance
+    scan_mode: ScanMode = ScanMode.AODA  # Default to AODA requirements
 
 
 class ScanResult(BaseModel):
@@ -75,6 +82,7 @@ class ScanResult(BaseModel):
     max_depth: int = 3
     same_domain_only: bool = True
     restrict_to_path: bool = True
+    scan_mode: str = "aoda"  # Store as string for database compatibility
 
     @property
     def duration(self) -> Optional[float]:

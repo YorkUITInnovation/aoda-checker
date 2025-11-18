@@ -217,6 +217,20 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label for="scanMode" class="form-label fw-semibold">
+                                        Accessibility Standard
+                                    </label>
+                                    <select class="form-select" id="scanMode" name="scanMode">
+                                        <option value="aoda" selected>Ontario AODA/IASR (WCAG 2.0 Level AA)</option>
+                                        <option value="wcag21">Full WCAG 2.1 Level AA</option>
+                                    </select>
+                                    <div class="form-text">
+                                        <strong>AODA:</strong> Complies with Ontario's accessibility requirements (WCAG 2.0 AA)<br>
+                                        <strong>WCAG 2.1:</strong> Includes additional criteria beyond AODA requirements
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
                                     <div class="form-check">
                                         <input
                                             type="checkbox"
@@ -366,7 +380,8 @@
                 max_depth: parseInt(document.getElementById('maxDepth').value),
                 same_domain_only: true,
                 restrict_to_path: document.getElementById('restrictPath').checked,
-                enable_screenshots: document.getElementById('enableScreenshots').checked
+                enable_screenshots: document.getElementById('enableScreenshots').checked,
+                scan_mode: document.getElementById('scanMode').value
             };
 
             // Disable form

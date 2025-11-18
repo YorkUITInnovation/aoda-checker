@@ -7,6 +7,7 @@ An automated AODA/WCAG AA compliance checker that crawls websites and generates 
 ## Features
 
 - ✅ **User Authentication & Management** - Secure login, user roles, admin panel
+- ✅ **Dual Scan Modes** - Choose between Ontario AODA/IASR (WCAG 2.0 AA) or Full WCAG 2.1 AA
 - ✅ Crawl websites and analyze accessibility
 - ✅ WCAG 2.1 AA compliance testing using axe-core
 - ✅ **Path restriction for focused scanning** (scan only specific sections like `/uit`)

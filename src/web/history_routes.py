@@ -63,6 +63,7 @@ async def get_scan_history(
         "total_violations": scan.total_violations,
         "max_pages": scan.max_pages,
         "max_depth": scan.max_depth,
+        "scan_mode": getattr(scan, 'scan_mode', 'aoda'),
         "start_time": scan.start_time.isoformat(),
         "end_time": scan.end_time.isoformat() if scan.end_time else None,
         "user_id": scan.user_id
