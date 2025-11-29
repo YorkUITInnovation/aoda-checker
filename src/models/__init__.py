@@ -96,7 +96,7 @@ class ScanResult(BaseModel):
     pages_with_violations: int = 0
     total_violations: int = 0
     page_results: List[PageResult] = []
-    status: str = "running"  # running, completed, failed
+    status: str = "in_progress"  # in_progress, completed, failed (matches ScanStatus enum)
     error_message: Optional[str] = None
 
     # Scan configuration

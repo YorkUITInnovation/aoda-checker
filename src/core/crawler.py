@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class AccessibilityCrawler:
     """Crawler that tests web pages for accessibility compliance."""
 
-    def __init__(self, scan_request: ScanRequest):
+    def __init__(self, scan_request: ScanRequest, user_id: Optional[int] = None):
         """Initialize the crawler with scan parameters."""
         self.start_url = str(scan_request.url)
         self.max_pages = scan_request.max_pages
@@ -40,6 +40,16 @@ class AccessibilityCrawler:
         # Will be loaded when crawl starts
         self.enabled_check_ids: Optional[Set[str]] = None
         self.check_severity_map: Dict[str, str] = {}  # Maps check_id to severity level
+
+        # Checkpointing
+        self.checkpoint_interval = 50  # Save progress every 50 pages
+        self.last_checkpoint = 0  # Track when we last saved
+        self.user_id = user_id  # Store user_id for checkpointing
+        self.checkpoint_buffer: List[PageResult] = []  # Buffer for new results since last checkpoint
+
+        # Browser cycling (to prevent memory leaks)
+        self.browser_cycle_interval = 100  # Restart browser every 100 pages
+        self.pages_since_browser_restart = 0  # Track pages since last browser restart
 
         # Normalize the start URL to ensure consistency
         normalized_start = AccessibilityCrawler._normalize_url(self.start_url) or self.start_url
@@ -58,7 +68,8 @@ class AccessibilityCrawler:
             max_depth=self.max_depth,
             same_domain_only=self.same_domain_only,
             restrict_to_path=self.restrict_to_path,
-            scan_mode=self.scan_mode
+            scan_mode=self.scan_mode,
+            status="in_progress"  # Use valid enum value
         )
 
     async def crawl(self) -> ScanResult:
@@ -100,9 +111,23 @@ class AccessibilityCrawler:
             self.check_severity_map = {}
             self.enabled_check_ids = None
 
+        # Create initial scan record in database if user_id provided
+        if self.user_id:
+            try:
+                from src.database import get_db_session
+                from src.database.repository import ScanRepository
+
+                async with get_db_session() as db:
+                    repo = ScanRepository(db)
+                    await repo.create_scan(self.scan_result, self.user_id)
+                    logger.info(f"Created initial scan record for scan_id: {self.scan_result.scan_id}")
+            except Exception as e:
+                logger.warning(f"Could not create initial scan record: {e}")
+
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
+                logger.info(f"🌐 Browser launched (session 1)")
 
                 while self.to_visit and len(self.visited_urls) < self.max_pages:
                     current_url, depth = self.to_visit.pop(0)
@@ -118,12 +143,27 @@ class AccessibilityCrawler:
                     # Scan the page
                     page_result, page_content = await self._scan_page(browser, current_url)
                     self.scan_result.page_results.append(page_result)
+                    self.checkpoint_buffer.append(page_result)  # Add to checkpoint buffer
                     self.scan_result.pages_scanned += 1
+                    self.pages_since_browser_restart += 1
 
                     if page_result.has_violations:
                         self.scan_result.pages_with_violations += 1
 
                     self.scan_result.total_violations += page_result.violation_count
+
+                    # Checkpoint every N pages
+                    if self.user_id and (self.scan_result.pages_scanned - self.last_checkpoint) >= self.checkpoint_interval:
+                        await self._save_checkpoint()
+
+                    # Browser cycling: Restart browser every 100 pages to prevent memory leaks
+                    if self.pages_since_browser_restart >= self.browser_cycle_interval:
+                        logger.info(f"🔄 Browser cycle: Restarting browser after {self.pages_since_browser_restart} pages (Total: {self.scan_result.pages_scanned})")
+                        await browser.close()
+                        browser = await p.chromium.launch(headless=True)
+                        self.pages_since_browser_restart = 0
+                        session_number = (self.scan_result.pages_scanned // self.browser_cycle_interval) + 1
+                        logger.info(f"✅ Browser restarted successfully (session {session_number})")
 
                     # Extract links if not at max depth (use page content)
                     if depth < self.max_depth and not page_result.error and page_content:
@@ -140,10 +180,40 @@ class AccessibilityCrawler:
                     await asyncio.sleep(settings.request_delay)
 
                 await browser.close()
+                logger.info(f"🌐 Browser closed (Total pages scanned: {self.scan_result.pages_scanned})")
+
+            # Final checkpoint for any remaining pages
+            logger.info(f"Scan loop completed. Checking for final checkpoint...")
+            if self.user_id and self.checkpoint_buffer:
+                logger.info(f"💾 Performing FINAL checkpoint for {len(self.checkpoint_buffer)} remaining pages")
+                await self._save_checkpoint(is_final=True)
+            else:
+                if not self.user_id:
+                    logger.info("No final checkpoint - user_id not provided")
+                elif not self.checkpoint_buffer:
+                    logger.info("No final checkpoint - buffer is empty (already saved)")
+
+            # Update scan status to COMPLETED in database
+            if self.user_id:
+                try:
+                    from src.database import get_db_session
+                    from src.database.repository import ScanRepository
+                    from src.database.models import ScanStatus
+
+                    async with get_db_session() as db:
+                        repo = ScanRepository(db)
+                        await repo.update_scan_status(
+                            scan_id=self.scan_result.scan_id,
+                            status=ScanStatus.COMPLETED,
+                            error_message=None
+                        )
+                    logger.info(f"✅ Scan status updated to COMPLETED in database")
+                except Exception as e:
+                    logger.error(f"Failed to update scan status to COMPLETED: {e}")
 
             self.scan_result.end_time = datetime.now()
             self.scan_result.status = "completed"
-            logger.info(f"Crawl completed. Scanned {self.scan_result.pages_scanned} pages")
+            logger.info(f"✅ Crawl completed. Scanned {self.scan_result.pages_scanned} pages")
 
         except Exception as e:
             logger.error(f"Crawl failed: {str(e)}", exc_info=True)
@@ -415,3 +485,35 @@ class AccessibilityCrawler:
         except:
             return False
 
+    async def _save_checkpoint(self, is_final: bool = False):
+        """Save progress checkpoint to database."""
+        if not self.user_id or not self.checkpoint_buffer:
+            return
+
+        try:
+            from src.database import get_db_session
+            from src.database.repository import ScanRepository
+
+            checkpoint_type = "FINAL" if is_final else "Regular"
+            logger.info(f"💾 {checkpoint_type} Checkpoint: Saving {len(self.checkpoint_buffer)} pages (Total: {self.scan_result.pages_scanned})")
+
+            async with get_db_session() as db:
+                repo = ScanRepository(db)
+                await repo.update_scan_progress(
+                    scan_id=self.scan_result.scan_id,
+                    pages_scanned=self.scan_result.pages_scanned,
+                    pages_with_violations=self.scan_result.pages_with_violations,
+                    total_violations=self.scan_result.total_violations,
+                    page_results=self.checkpoint_buffer,
+                    is_final=is_final
+                )
+
+            # Clear buffer and update checkpoint marker
+            buffer_size = len(self.checkpoint_buffer)
+            self.checkpoint_buffer = []
+            self.last_checkpoint = self.scan_result.pages_scanned
+            logger.info(f"✅ Checkpoint saved: {buffer_size} pages committed to database")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to save checkpoint: {e}")
+            # Continue scanning even if checkpoint fails

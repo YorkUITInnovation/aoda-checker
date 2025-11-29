@@ -151,11 +151,70 @@ class ScanRepository:
 
         if scan:
             scan.status = status
-            if status in [ScanStatus.COMPLETED, ScanStatus.FAILED]:
-                scan.end_time = datetime.utcnow()
             if error_message:
                 scan.error_message = error_message
+            if status in [ScanStatus.COMPLETED, ScanStatus.FAILED]:
+                scan.end_time = datetime.utcnow()
             await self.session.commit()
+
+    async def update_scan_progress(self, scan_id: str, pages_scanned: int,
+                                   pages_with_violations: int, total_violations: int,
+                                   page_results: List[PageResult],
+                                   is_final: bool = False) -> Optional[Scan]:
+        """
+        Update scan progress incrementally (for checkpointing).
+        This allows saving progress every N pages without completing the scan.
+
+        Args:
+            scan_id: The scan ID
+            pages_scanned: Total pages scanned so far
+            pages_with_violations: Total pages with violations
+            total_violations: Total violation count
+            page_results: List of new page results since last checkpoint
+            is_final: Whether this is the final checkpoint (updates end_time)
+        """
+        result = await self.session.execute(
+            select(Scan).where(Scan.scan_id == scan_id)
+        )
+        scan = result.scalar_one_or_none()
+
+        if not scan:
+            return None
+
+        # Update scan statistics
+        scan.pages_scanned = pages_scanned
+        scan.pages_with_violations = pages_with_violations
+        scan.total_violations = total_violations
+
+        # Set end_time if this is the final checkpoint
+        if is_final:
+            scan.end_time = datetime.utcnow()
+
+        # Add new page results (only the new ones since last checkpoint)
+        for page_result in page_results:
+            await self._create_page_scan(scan.id, page_result)
+
+        await self.session.commit()
+        return scan
+
+    async def get_scan_checkpoint(self, scan_id: str) -> Optional[dict]:
+        """
+        Get the last checkpoint for a scan to enable resume capability.
+        Returns the scan's current progress and last scanned pages.
+        """
+        scan = await self.get_scan_by_id(scan_id)
+
+        if not scan:
+            return None
+
+        return {
+            'scan_id': scan.scan_id,
+            'pages_scanned': scan.pages_scanned,
+            'pages_with_violations': scan.pages_with_violations,
+            'total_violations': scan.total_violations,
+            'status': scan.status,
+            'scanned_urls': [page.url for page in scan.pages] if scan.pages else []
+        }
 
     async def delete_scan(self, scan_id: str) -> bool:
         """Delete a scan and all its related data."""

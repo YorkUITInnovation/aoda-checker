@@ -93,8 +93,8 @@ async def start_scan(
     """Start a new accessibility scan."""
     logger.info(f"Starting scan for {scan_request.url} by user {current_user.username}")
 
-    # Create crawler and start scan in background
-    crawler = AccessibilityCrawler(scan_request)
+    # Create crawler with user_id for checkpointing
+    crawler = AccessibilityCrawler(scan_request, user_id=current_user.id)
     scan_id = crawler.scan_result.scan_id
 
     # Store initial result in memory
@@ -114,20 +114,37 @@ async def run_scan(crawler: AccessibilityCrawler, scan_id: str, user_id: int):
     """Run the scan and update results."""
     from src.database import get_db_session
     from src.database.repository import ScanRepository
+    from src.database.models import ScanStatus
 
     try:
         result = await crawler.crawl()
         scan_results[scan_id] = result
         logger.info(f"Scan {scan_id} completed")
 
-        # Persist to database
+        # Update database with final status
+        # Note: Scan record already exists from initial checkpoint
         try:
             async with get_db_session() as db:
                 repo = ScanRepository(db)
-                await repo.create_scan(result, user_id)
-                logger.info(f"Scan {scan_id} saved to database")
+
+                # Check if scan already exists (it should, from initial checkpoint)
+                existing_scan = await repo.get_scan_by_id(scan_id)
+
+                if existing_scan:
+                    # Update existing scan with final status
+                    await repo.update_scan_status(
+                        scan_id=scan_id,
+                        status=ScanStatus.COMPLETED,
+                        error_message=None
+                    )
+                    logger.info(f"Scan {scan_id} status updated to COMPLETED in database")
+                else:
+                    # Fallback: create scan if it doesn't exist (shouldn't happen with checkpointing)
+                    await repo.create_scan(result, user_id)
+                    logger.info(f"Scan {scan_id} created in database (no initial checkpoint)")
+
         except Exception as db_error:
-            logger.error(f"Failed to save scan {scan_id} to database: {db_error}")
+            logger.error(f"Failed to update scan {scan_id} in database: {db_error}")
             # Continue even if database save fails
 
     except Exception as e:
@@ -144,6 +161,7 @@ async def run_scan(crawler: AccessibilityCrawler, scan_id: str, user_id: int):
                     await repo.update_scan_status(scan_id, ScanStatus.FAILED, str(e))
             except Exception as db_error:
                 logger.error(f"Failed to update scan status in database: {db_error}")
+
 
 
 
