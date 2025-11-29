@@ -367,6 +367,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Get all DOM elements globally so they're accessible everywhere
         const scanForm = document.getElementById('scanForm');
         const scanButton = document.getElementById('scanButton');
         const progressSection = document.getElementById('progressSection');
@@ -429,6 +430,12 @@
                     const response = await fetch(`/api/scan/${scanId}`);
                     const data = await response.json();
 
+                    console.log('Poll update:', {
+                        status: data.status,
+                        pages_scanned: data.pages_scanned,
+                        total_violations: data.total_violations
+                    });
+
                     // Update stat blocks
                     pagesScanned.textContent = data.pages_scanned || 0;
                     issuesFound.textContent = data.total_violations || 0;
@@ -460,6 +467,59 @@
                 }
             }, 2000);
         }
+
+        // Check if page loaded with a resumed scan
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const scanId = urlParams.get('scan_id');
+            const resumed = urlParams.get('resumed');
+
+            if (scanId && resumed === 'true') {
+                try {
+                    // Fetch scan details from API
+                    const response = await fetch(`/api/scan/${scanId}`);
+                    const scanData = await response.json();
+
+                    // Get form elements
+                    const urlInput = document.getElementById('url');
+                    const maxPagesInput = document.getElementById('maxPages');
+                    const maxDepthInput = document.getElementById('maxDepth');
+                    const progressSection = document.getElementById('progressSection');
+                    const progressText = document.getElementById('progressText');
+                    const scanButton = document.getElementById('scanButton');
+                    const pagesScanned = document.getElementById('pagesScanned');
+                    const issuesFound = document.getElementById('issuesFound');
+                    const progressBar = document.getElementById('progressBar');
+                    const progressPercent = document.getElementById('progressPercent');
+
+                    // Pre-fill form fields with resumed scan configuration
+                    if (urlInput) urlInput.value = scanData.start_url || '';
+                    if (maxPagesInput) maxPagesInput.value = scanData.max_pages || 25;
+                    if (maxDepthInput) maxDepthInput.value = scanData.max_depth || 3;
+
+                    // Initialize progress stats with current values
+                    pagesScanned.textContent = scanData.pages_scanned || 0;
+                    issuesFound.textContent = scanData.total_violations || 0;
+
+                    // Calculate initial progress
+                    const initialProgress = Math.min(30 + ((scanData.pages_scanned || 0) * 3), 90);
+                    progressBar.style.width = `${initialProgress}%`;
+                    progressPercent.textContent = `${initialProgress}%`;
+
+                    // Show progress section
+                    progressSection.style.display = 'block';
+                    progressText.innerHTML = `<strong>Scan resumed successfully!</strong> Continuing from checkpoint (${scanData.pages_scanned || 0} pages already scanned)...`;
+                    scanButton.disabled = true;
+
+                    // Start polling the resumed scan
+                    pollScanStatus(scanId);
+                } catch (error) {
+                    console.error('Error loading resumed scan:', error);
+                    alert('Failed to load scan details. Redirecting to history...');
+                    window.location.href = '/history';
+                }
+            }
+        });
     </script>
 </body>
 </html>

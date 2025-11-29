@@ -25,8 +25,14 @@ logger = logging.getLogger(__name__)
 class AccessibilityCrawler:
     """Crawler that tests web pages for accessibility compliance."""
 
-    def __init__(self, scan_request: ScanRequest, user_id: Optional[int] = None):
-        """Initialize the crawler with scan parameters."""
+    def __init__(self, scan_request: ScanRequest, user_id: Optional[int] = None, resume_scan_id: Optional[str] = None):
+        """Initialize the crawler with scan parameters.
+
+        Args:
+            scan_request: The scan request configuration
+            user_id: User ID for database operations
+            resume_scan_id: Optional scan_id to resume from last checkpoint
+        """
         self.start_url = str(scan_request.url)
         self.max_pages = scan_request.max_pages
         self.max_depth = scan_request.max_depth
@@ -41,11 +47,21 @@ class AccessibilityCrawler:
         self.enabled_check_ids: Optional[Set[str]] = None
         self.check_severity_map: Dict[str, str] = {}  # Maps check_id to severity level
 
-        # Checkpointing
-        self.checkpoint_interval = 50  # Save progress every 50 pages
+        # Checkpointing - Dynamic interval based on scan size
+        # For small scans (<=100 pages): save every page for better granularity
+        # For large scans (>100 pages): save every 50 pages for performance
+        if self.max_pages <= 100:
+            self.checkpoint_interval = 1  # Save after every page
+        else:
+            self.checkpoint_interval = 50  # Save every 50 pages
+
         self.last_checkpoint = 0  # Track when we last saved
         self.user_id = user_id  # Store user_id for checkpointing
         self.checkpoint_buffer: List[PageResult] = []  # Buffer for new results since last checkpoint
+
+        # Resume capability
+        self.resume_scan_id = resume_scan_id  # Scan ID to resume from
+        self.is_resuming = resume_scan_id is not None  # Flag to indicate resume mode
 
         # Browser cycling (to prevent memory leaks)
         self.browser_cycle_interval = 100  # Restart browser every 100 pages
@@ -78,6 +94,7 @@ class AccessibilityCrawler:
         logger.info(f"Configuration: max_pages={self.max_pages}, max_depth={self.max_depth}, same_domain_only={self.same_domain_only}, restrict_to_path={self.restrict_to_path}")
         logger.info(f"Scan mode: {self.scan_mode.upper()} ({'WCAG 2.1 Level AA' if self.scan_mode == 'wcag21' else 'Ontario AODA/IASR (WCAG 2.0 Level AA)'})")
         logger.info(f"Performance: request_delay={settings.request_delay}s, timeout={settings.timeout}ms, screenshots={'enabled' if self.enable_screenshots else 'disabled'}")
+        logger.info(f"Checkpointing: Saving every {self.checkpoint_interval} page(s) ({'frequent saves for small scan' if self.checkpoint_interval == 1 else 'batched saves for large scan'})")
         logger.info(f"Domain: {self.domain}")
         if self.restrict_to_path:
             logger.info(f"Path restriction: {self.start_path or '/'}")
@@ -109,10 +126,17 @@ class AccessibilityCrawler:
             logger.warning(f"Could not load check configurations: {e}. All checks will run.")
             self.enabled_check_ids = None
             self.check_severity_map = {}
-            self.enabled_check_ids = None
 
-        # Create initial scan record in database if user_id provided
-        if self.user_id:
+        # Resume from checkpoint if resume_scan_id provided
+        if self.is_resuming and self.user_id:
+            logger.info(f"🔄 Attempting to resume scan from checkpoint: {self.resume_scan_id}")
+            resumed = await self._load_from_checkpoint()
+            if not resumed:
+                logger.warning("Failed to resume from checkpoint, starting fresh scan")
+                self.is_resuming = False
+
+        # Create initial scan record in database if user_id provided (and not resuming)
+        if self.user_id and not self.is_resuming:
             try:
                 from src.database import get_db_session
                 from src.database.repository import ScanRepository
@@ -132,7 +156,32 @@ class AccessibilityCrawler:
                 while self.to_visit and len(self.visited_urls) < self.max_pages:
                     current_url, depth = self.to_visit.pop(0)
 
+                    # Check if already visited
                     if current_url in self.visited_urls:
+                        # If resuming, we need to re-extract links from already-visited pages
+                        # to discover new pages that weren't in the to_visit queue
+                        if self.is_resuming:
+                            try:
+                                # Visit page just to extract links (don't scan)
+                                page = await browser.new_page()
+                                await page.goto(current_url, timeout=settings.timeout, wait_until='networkidle')
+                                page_content = await page.content()
+                                await page.close()
+
+                                # Extract links using the correct method
+                                links = self._extract_links_from_html(current_url, page_content)
+
+                                # Add new unvisited links to queue
+                                existing_urls = {url for url, _ in self.to_visit}
+                                new_count = 0
+                                for link in links:
+                                    if link not in self.visited_urls and link not in existing_urls:
+                                        self.to_visit.append((link, depth + 1))
+                                        new_count += 1
+
+                                logger.info(f"Re-extracted {len(links)} links from {current_url}, added {new_count} new links to queue")
+                            except Exception as e:
+                                logger.warning(f"Could not re-extract links from {current_url}: {e}")
                         continue
 
                     if depth > self.max_depth:
@@ -517,3 +566,84 @@ class AccessibilityCrawler:
         except Exception as e:
             logger.error(f"❌ Failed to save checkpoint: {e}")
             # Continue scanning even if checkpoint fails
+
+    async def _load_from_checkpoint(self) -> bool:
+        """
+        Load scan state from last checkpoint to resume scanning.
+
+        Returns:
+            bool: True if successfully resumed, False otherwise
+        """
+        if not self.resume_scan_id or not self.user_id:
+            return False
+
+        try:
+            from src.database import get_db_session
+            from src.database.repository import ScanRepository
+
+            async with get_db_session() as db:
+                repo = ScanRepository(db)
+
+                # Get checkpoint data
+                checkpoint = await repo.get_scan_checkpoint(self.resume_scan_id)
+
+                if not checkpoint:
+                    logger.error(f"No checkpoint found for scan_id: {self.resume_scan_id}")
+                    return False
+
+                # Check if scan is already completed
+                if checkpoint['status'].value == 'completed':
+                    logger.warning(f"Scan {self.resume_scan_id} is already completed, cannot resume")
+                    return False
+
+                # Load scan from database
+                scan = await repo.get_scan_by_id(self.resume_scan_id)
+                if not scan:
+                    logger.error(f"Scan not found in database: {self.resume_scan_id}")
+                    return False
+
+                # Restore scan state using repository method
+                self.scan_result = await repo.convert_to_scan_result(scan)
+                self.scan_result.scan_id = self.resume_scan_id  # Keep same scan_id
+                self.scan_result.status = "in_progress"  # Reset to in_progress
+
+                # Restore visited URLs from checkpoint
+                scanned_urls = checkpoint['scanned_urls']
+                self.visited_urls = set(scanned_urls)
+
+                # Update checkpoint tracking
+                self.last_checkpoint = checkpoint['pages_scanned']
+
+                logger.info(f"✅ Resumed from checkpoint:")
+                logger.info(f"   - Pages already scanned: {len(scanned_urls)}")
+                logger.info(f"   - Total violations so far: {checkpoint['total_violations']}")
+                logger.info(f"   - Continuing from page {len(scanned_urls) + 1}...")
+
+                # CRITICAL FIX: Re-initialize to_visit queue to continue crawling
+                # The checkpoint only saves visited URLs, not the to_visit queue
+                # We need to restart crawling from the starting URL to discover remaining pages
+                # The visited_urls set will prevent re-scanning already scanned pages
+                #
+                # Important: We add start_url even though it's in visited_urls
+                # The crawl loop will skip scanning it but will extract links from it
+                # This allows discovering new pages to scan
+                self.to_visit = [(self.start_url, 0)]
+                logger.info(f"✅ Re-initialized crawl queue from starting URL")
+                logger.info(f"   - Already scanned URLs will be skipped automatically")
+                logger.info(f"   - Will re-extract links to discover unscanned pages")
+
+                # Update in-memory scan_results so polling can see current progress
+                # This is needed because the resume endpoint stored an empty result
+                try:
+                    from src.web.app import scan_results
+                    scan_results[self.resume_scan_id] = self.scan_result
+                    logger.info(f"✅ Updated in-memory scan result for polling")
+                except Exception as e:
+                    logger.warning(f"Could not update in-memory scan results: {e}")
+
+                return True
+
+        except Exception as e:
+            logger.error(f"Failed to load checkpoint: {e}", exc_info=True)
+            return False
+

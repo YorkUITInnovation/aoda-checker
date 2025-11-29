@@ -12,8 +12,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware
+from pydantic import HttpUrl
 
-from src.models import ScanRequest, ScanResult
+from src.models import ScanRequest, ScanResult, ScanMode
 from src.core import AccessibilityCrawler
 from src.config import settings
 from src.database import init_db, get_db
@@ -110,6 +111,75 @@ async def start_scan(
     }
 
 
+@app.post("/api/scan/resume/{scan_id}")
+async def resume_scan(
+    scan_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Resume an interrupted scan from last checkpoint."""
+    logger.info(f"Resuming scan {scan_id} by user {current_user.username}")
+
+    try:
+        # Get the original scan from database
+        repo = ScanRepository(db)
+        original_scan = await repo.get_scan_by_id(scan_id)
+
+        if not original_scan:
+            raise HTTPException(status_code=404, detail="Scan not found")
+
+        # Check permissions
+        if not current_user.is_admin and original_scan.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Check if scan is already completed
+        if original_scan.status == ScanStatus.COMPLETED:
+            raise HTTPException(
+                status_code=400,
+                detail="Scan is already completed and cannot be resumed"
+            )
+
+        # Create scan request from original scan configuration
+        scan_request = ScanRequest(
+            url=HttpUrl(original_scan.start_url),
+            max_pages=original_scan.max_pages,
+            max_depth=original_scan.max_depth,
+            same_domain_only=bool(original_scan.same_domain_only),
+            restrict_to_path=True,  # Preserve original behavior
+            enable_screenshots=False,  # Default
+            scan_mode=ScanMode(original_scan.scan_mode)
+        )
+
+        # Create crawler with resume capability
+        crawler = AccessibilityCrawler(
+            scan_request,
+            user_id=current_user.id,
+            resume_scan_id=scan_id  # Enable resume mode
+        )
+
+        # Use the same scan_id for continuity
+        crawler.scan_result.scan_id = scan_id
+
+        # Store result in memory
+        scan_results[scan_id] = crawler.scan_result
+
+        # Run resumed scan in background
+        background_tasks.add_task(run_scan, crawler, scan_id, current_user.id)
+
+        return {
+            "scan_id": scan_id,
+            "status": "resumed",
+            "message": "Scan resumed from last checkpoint"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to resume scan {scan_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to resume scan: {str(e)}")
+
+
 async def run_scan(crawler: AccessibilityCrawler, scan_id: str, user_id: int):
     """Run the scan and update results."""
     from src.database import get_db_session
@@ -166,16 +236,32 @@ async def run_scan(crawler: AccessibilityCrawler, scan_id: str, user_id: int):
 
 
 @app.get("/api/scan/{scan_id}")
-async def get_scan_status(scan_id: str):
+async def get_scan_status(scan_id: str, db: AsyncSession = Depends(get_db)):
     """Get the status of a scan."""
-    if scan_id not in scan_results:
-        raise HTTPException(status_code=404, detail="Scan not found")
+    result = None
 
-    result = scan_results[scan_id]
+    # First try memory
+    if scan_id in scan_results:
+        result = scan_results[scan_id]
+    else:
+        # Try database
+        try:
+            repo = ScanRepository(db)
+            db_scan = await repo.get_scan_by_id(scan_id)
+            if db_scan:
+                result = await repo.convert_to_scan_result(db_scan)
+        except Exception as e:
+            logger.error(f"Error loading scan from database: {e}")
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Scan not found")
 
     response = {
         "scan_id": scan_id,
         "status": result.status,
+        "start_url": result.start_url,
+        "max_pages": result.max_pages,
+        "max_depth": result.max_depth,
         "pages_scanned": result.pages_scanned,
         "pages_with_violations": result.pages_with_violations,
         "total_violations": result.total_violations,
