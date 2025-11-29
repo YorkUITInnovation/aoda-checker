@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Check Configuration Test - No Cache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .check-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .check-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .check-field {
+            margin: 5px 0;
+            padding: 5px;
+            background: #f9f9f9;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+        .check-field label {
+            font-weight: bold;
+            color: #666;
+            margin-right: 10px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-error { background: #dc3545; color: white; }
+        .badge-warning { background: #ffc107; color: #000; }
+        .badge-alert { background: #17a2b8; color: white; }
+        .badge-info { background: #0dcaf0; color: #000; }
+        .badge-success { background: #28a745; color: white; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #666;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Check Configuration Test (No Cache)</h1>
+    <p>This page loads check data directly from the API with cache disabled.</p>
+    <p><strong>Testing: frame-title check</strong></p>
+
+    <div id="result">
+        <div class="loading">⏳ Loading check data...</div>
+    </div>
+
+    <div class="timestamp" id="timestamp"></div>
+
+    <script>
+        // Disable caching
+        const cacheBuster = new Date().getTime();
+
+        async function loadCheckData() {
+            try {
+                // Fetch with no-cache headers
+                const response = await fetch(`/api/admin/checks/?t=${cacheBuster}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const checks = await response.json();
+
+                // Find frame-title check
+                const frameCheck = checks.find(c => c.check_id === 'frame-title');
+
+                if (!frameCheck) {
+                    document.getElementById('result').innerHTML = `
+                        <div class="error">
+                            ❌ frame-title check not found in database!<br>
+                            Total checks loaded: ${checks.length}
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Display the check
+                document.getElementById('result').innerHTML = `
+                    <div class="check-card">
+                        <div class="check-title">✅ frame-title Check Found</div>
+
+                        <div class="check-field">
+                            <label>Check ID:</label>
+                            ${frameCheck.check_id}
+                        </div>
+
+                        <div class="check-field">
+                            <label>Check Name:</label>
+                            ${frameCheck.check_name}
+                        </div>
+
+                        <div class="check-field">
+                            <label>Description:</label>
+                            ${frameCheck.description || '<span style="color:red;">❌ MISSING</span>'}
+                        </div>
+
+                        <div class="check-field">
+                            <label>Severity:</label>
+                            <span class="badge badge-${frameCheck.severity}">
+                                ${frameCheck.severity ? frameCheck.severity.toUpperCase() : '❌ MISSING'}
+                            </span>
+                        </div>
+
+                        <div class="check-field">
+                            <label>WCAG Criterion:</label>
+                            ${frameCheck.wcag_criterion ?
+                                `<span class="badge badge-info">${frameCheck.wcag_criterion} (${frameCheck.wcag_level})</span>` :
+                                '<span style="color:red;">❌ MISSING</span>'
+                            }
+                            ${frameCheck.aoda_required ?
+                                '<span class="badge badge-success">AODA Required</span>' : ''
+                            }
+                        </div>
+
+                        <div class="check-field">
+                            <label>Check Type:</label>
+                            ${frameCheck.check_type || '<span style="color:red;">❌ MISSING</span>'}
+                        </div>
+
+                        <div class="check-field">
+                            <label>Help URL:</label>
+                            ${frameCheck.help_url ?
+                                `<a href="${frameCheck.help_url}" target="_blank">${frameCheck.help_url}</a>` :
+                                '<span style="color:red;">❌ MISSING</span>'
+                            }
+                        </div>
+
+                        <div class="check-field">
+                            <label>Enabled:</label>
+                            ${frameCheck.enabled ? '✅ Yes' : '❌ No'}
+                        </div>
+                    </div>
+
+                    <div class="check-card">
+                        <h3>✅ All Fields Status</h3>
+                        <ul>
+                            <li>Description: ${frameCheck.description ? '✅ Present' : '❌ Missing'}</li>
+                            <li>Severity: ${frameCheck.severity ? '✅ Present' : '❌ Missing'}</li>
+                            <li>WCAG Criterion: ${frameCheck.wcag_criterion ? '✅ Present' : '❌ Missing'}</li>
+                            <li>WCAG Level: ${frameCheck.wcag_level ? '✅ Present' : '❌ Missing'}</li>
+                            <li>Check Type: ${frameCheck.check_type ? '✅ Present' : '❌ Missing'}</li>
+                            <li>Help URL: ${frameCheck.help_url ? '✅ Present' : '❌ Missing'}</li>
+                        </ul>
+                    </div>
+
+                    <div class="check-card">
+                        <h3>📊 Summary</h3>
+                        <p>Total checks in database: <strong>${checks.length}</strong></p>
+                        <p>frame-title check: <strong>${frameCheck.description && frameCheck.severity && frameCheck.wcag_criterion && frameCheck.check_type ? '✅ COMPLETE' : '❌ INCOMPLETE'}</strong></p>
+                    </div>
+                `;
+
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="error">
+                        ❌ Error loading check data:<br>
+                        ${error.message}
+                        <br><br>
+                        Make sure you're logged in and have admin access.
+                    </div>
+                `;
+            }
+
+            document.getElementById('timestamp').textContent =
+                `Loaded at: ${new Date().toLocaleString()} (Cache-Buster: ${cacheBuster})`;
+        }
+
+        loadCheckData();
+    </script>
+</body>
+</html>
+

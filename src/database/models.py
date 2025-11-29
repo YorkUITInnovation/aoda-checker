@@ -201,3 +201,47 @@ class Violation(Base):
     def __repr__(self):
         return f"<Violation(id={self.violation_id}, impact={self.impact})>"
 
+
+class CheckSeverity(str, enum.Enum):
+    """Severity level for accessibility checks."""
+    ERROR = "error"
+    WARNING = "warning"
+    ALERT = "alert"
+    DISABLED = "disabled"
+
+
+class CheckConfiguration(Base):
+    """Configuration for individual accessibility checks."""
+    __tablename__ = "check_configurations"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Check identification
+    check_id = Column(String(128), unique=True, index=True, nullable=False)  # e.g., 'image-alt', 'empty-heading'
+    check_name = Column(String(255), nullable=False)  # Human-readable name
+    description = Column(Text, nullable=True)  # Description of what the check does
+
+    # Configuration
+    enabled = Column(Boolean, default=True, nullable=False)  # Whether check is enabled
+    severity = Column(Enum(CheckSeverity), default=CheckSeverity.ERROR, nullable=False)  # error, warning, or alert
+
+    # WCAG/AODA mapping
+    wcag_criterion = Column(String(128), nullable=True)  # e.g., '1.1.1', '2.4.6'
+    wcag_level = Column(String(10), nullable=True)  # 'A', 'AA', 'AAA'
+    aoda_required = Column(Boolean, default=False, nullable=False)  # Required by AODA
+    wcag21_only = Column(Boolean, default=False, nullable=False)  # Only in WCAG 2.1, not 2.0
+
+    # Check type
+    check_type = Column(String(50), default='axe', nullable=False)  # 'axe', 'custom', 'html-cs'
+
+    # Metadata
+    help_url = Column(String(512), nullable=True)
+    tags = Column(JSON, nullable=True)  # Array of relevant tags
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<CheckConfiguration(check_id={self.check_id}, enabled={self.enabled}, severity={self.severity})>"
+

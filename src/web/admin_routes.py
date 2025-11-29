@@ -54,6 +54,21 @@ async def admin_users_page(
     )
 
 
+@router.get("/checks", response_class=HTMLResponse)
+async def admin_checks_page(
+    request: Request,
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Render the admin checks configuration page."""
+    return templates.TemplateResponse(
+        "admin_checks.html",
+        {
+            "request": request,
+            "current_user": current_user
+        }
+    )
+
+
 @router.get("/api/users")
 async def get_all_users(
     current_user: User = Depends(get_current_admin_user),
@@ -334,4 +349,3 @@ async def delete_user_api(
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "User deleted successfully"}
-

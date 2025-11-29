@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Diagnostics</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .section { background: #252526; padding: 15px; margin: 10px 0; border-left: 3px solid #007acc; }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warning { color: #dcdcaa; }
+        h2 { color: #4ec9b0; margin-top: 0; }
+        .check-item { padding: 5px; margin: 2px 0; background: #2d2d30; }
+        pre { background: #1e1e1e; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Admin Checks Diagnostic Tool</h1>
+
+    <div class="section">
+        <h2>1. API Response</h2>
+        <div id="api-status">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>2. Check Count</h2>
+        <div id="check-count">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>3. All Check IDs</h2>
+        <div id="check-list">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>4. Missing Checks (Expected vs Received)</h2>
+        <div id="missing-checks">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>5. Sample Check Data</h2>
+        <div id="sample-data">Loading...</div>
+    </div>
+
+    <script>
+        const expectedChecks = [
+            'image-alt', 'spacer-image-alt', 'empty-heading', 'heading-order',
+            'p-as-heading', 'color-contrast', 'color-contrast-enhanced', 'frame-title',
+            'noscript-element', 'link-name', 'label', 'document-title',
+            'html-has-lang', 'bypass', 'aria-allowed-attr', 'aria-required-attr',
+            'aria-valid-attr', 'aria-valid-attr-value'
+        ];
+
+        async function runDiagnostics() {
+            try {
+                // Fetch data
+                const response = await fetch('/api/admin/checks/');
+                const statusDiv = document.getElementById('api-status');
+
+                if (!response.ok) {
+                    statusDiv.innerHTML = `<span class="error">❌ API Error: ${response.status} ${response.statusText}</span>`;
+                    return;
+                }
+
+                statusDiv.innerHTML = `<span class="success">✅ API Response: ${response.status} OK</span>`;
+
+                const checks = await response.json();
+
+                // Check count
+                const countDiv = document.getElementById('check-count');
+                countDiv.innerHTML = `
+                    <div>Expected: <span class="success">${expectedChecks.length}</span></div>
+                    <div>Received: <span class="${checks.length === 18 ? 'success' : 'error'}">${checks.length}</span></div>
+                    ${checks.length !== 18 ? '<div class="error">⚠️ MISMATCH!</div>' : '<div class="success">✅ MATCH!</div>'}
+                `;
+
+                // List all check IDs
+                const listDiv = document.getElementById('check-list');
+                const receivedIds = checks.map(c => c.check_id);
+                listDiv.innerHTML = receivedIds.map((id, i) =>
+                    `<div class="check-item">${i+1}. ${id}</div>`
+                ).join('');
+
+                // Find missing checks
+                const missingDiv = document.getElementById('missing-checks');
+                const missing = expectedChecks.filter(id => !receivedIds.includes(id));
+                const extra = receivedIds.filter(id => !expectedChecks.includes(id));
+
+                if (missing.length === 0 && extra.length === 0) {
+                    missingDiv.innerHTML = '<div class="success">✅ All expected checks are present!</div>';
+                } else {
+                    let html = '';
+                    if (missing.length > 0) {
+                        html += '<div class="error">❌ Missing checks:</div>';
+                        html += missing.map(id => `<div class="check-item error">  - ${id}</div>`).join('');
+                    }
+                    if (extra.length > 0) {
+                        html += '<div class="warning">⚠️ Unexpected checks:</div>';
+                        html += extra.map(id => `<div class="check-item warning">  - ${id}</div>`).join('');
+                    }
+                    missingDiv.innerHTML = html;
+                }
+
+                // Sample data
+                const sampleDiv = document.getElementById('sample-data');
+                if (checks.length > 0) {
+                    sampleDiv.innerHTML = '<pre>' + JSON.stringify(checks[0], null, 2) + '</pre>';
+                }
+
+            } catch (error) {
+                document.getElementById('api-status').innerHTML =
+                    `<span class="error">❌ Error: ${error.message}</span>`;
+                console.error('Diagnostic error:', error);
+            }
+        }
+
+        runDiagnostics();
+    </script>
+</body>
+</html>
+

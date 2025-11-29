@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from urllib.parse import urljoin, urlparse
-from typing import Set, List, Optional
+from typing import Set, List, Optional, Dict
 from datetime import datetime
 import uuid
 
@@ -37,6 +37,10 @@ class AccessibilityCrawler:
 
         self.visited_urls: Set[str] = set()
 
+        # Will be loaded when crawl starts
+        self.enabled_check_ids: Optional[Set[str]] = None
+        self.check_severity_map: Dict[str, str] = {}  # Maps check_id to severity level
+
         # Normalize the start URL to ensure consistency
         normalized_start = AccessibilityCrawler._normalize_url(self.start_url) or self.start_url
         self.to_visit: List[tuple[str, int]] = [(normalized_start, 0)]  # (url, depth)
@@ -66,6 +70,35 @@ class AccessibilityCrawler:
         logger.info(f"Domain: {self.domain}")
         if self.restrict_to_path:
             logger.info(f"Path restriction: {self.start_path or '/'}")
+
+        # Load enabled check configurations from database
+        logger.info("Loading check configurations from database...")
+        try:
+            from src.database import get_db_session
+            from src.database.check_repository import CheckConfigRepository
+
+            async with get_db_session() as db:
+                repo = CheckConfigRepository(db)
+                enabled_checks = await repo.get_enabled_checks()
+
+                if enabled_checks:
+                    self.enabled_check_ids = {check.check_id for check in enabled_checks}
+                    # Build severity mapping
+                    self.check_severity_map = {
+                        check.check_id: check.severity.value
+                        for check in enabled_checks
+                    }
+                    logger.info(f"Loaded {len(self.enabled_check_ids)} enabled checks from database")
+                    logger.debug(f"Enabled checks: {sorted(self.enabled_check_ids)}")
+                else:
+                    logger.warning("No check configurations found in database - all checks will run")
+                    self.enabled_check_ids = None
+                    self.check_severity_map = {}
+        except Exception as e:
+            logger.warning(f"Could not load check configurations: {e}. All checks will run.")
+            self.enabled_check_ids = None
+            self.check_severity_map = {}
+            self.enabled_check_ids = None
 
         try:
             async with async_playwright() as p:
@@ -145,6 +178,8 @@ class AccessibilityCrawler:
 
             # Run axe accessibility tests with appropriate configuration
             from src.utils.aoda_requirements import get_axe_config_for_scan_mode
+            from src.utils.custom_checker import CustomChecker
+
             axe = Axe()
             axe_config = get_axe_config_for_scan_mode(self.scan_mode)
             axe_results = await axe.run(page, options=axe_config)
@@ -165,8 +200,27 @@ class AccessibilityCrawler:
                     'inapplicable': getattr(axe_results, 'inapplicable', [])
                 }
 
-            # Process violations and capture screenshots
-            violations_list = results.get("violations", [])
+            # Run custom checks
+            custom_checker = CustomChecker(page_content, url)
+            custom_violations = custom_checker.run_all_checks()
+
+            # Combine axe and custom violations
+            all_violations = results.get("violations", []) + custom_violations
+
+            # Filter violations based on enabled check configurations
+            if self.enabled_check_ids is not None:
+                # Only include violations from enabled checks
+                violations_list = [
+                    v for v in all_violations
+                    if v.get("id") in self.enabled_check_ids
+                ]
+                filtered_count = len(all_violations) - len(violations_list)
+                if filtered_count > 0:
+                    logger.debug(f"Filtered out {filtered_count} violations from disabled checks")
+            else:
+                # No filtering - include all violations
+                violations_list = all_violations
+
             screenshot_count = 0  # Track screenshots per page
 
             for violation in violations_list:
@@ -197,10 +251,15 @@ class AccessibilityCrawler:
 
                     nodes_with_screenshots.append(node_data)
 
+                # Get severity from check configuration
+                check_id = violation["id"]
+                configured_severity = self.check_severity_map.get(check_id)
+
                 page_result.violations.append(
                     AccessibilityViolation(
                         id=violation["id"],
                         impact=ViolationImpact(violation.get("impact", "minor")),
+                        severity=configured_severity,  # Add configured severity
                         description=violation["description"],
                         help=violation["help"],
                         help_url=violation["helpUrl"],

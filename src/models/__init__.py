@@ -5,8 +5,15 @@ from datetime import datetime
 from enum import Enum
 
 
+class ViolationSeverity(str, Enum):
+    """Severity levels for accessibility violations based on check configuration."""
+    ERROR = "error"
+    WARNING = "warning"
+    ALERT = "alert"
+
+# Keep old enum for backward compatibility during transition
 class ViolationImpact(str, Enum):
-    """Severity levels for accessibility violations."""
+    """Severity levels for accessibility violations (deprecated - use ViolationSeverity)."""
     CRITICAL = "critical"
     SERIOUS = "serious"
     MODERATE = "moderate"
@@ -16,12 +23,27 @@ class ViolationImpact(str, Enum):
 class AccessibilityViolation(BaseModel):
     """Model for a single accessibility violation."""
     id: str
-    impact: ViolationImpact
+    impact: ViolationImpact  # Deprecated - kept for compatibility
+    severity: Optional[str] = None  # New field from check configuration
     description: str
     help: str
     help_url: str
     tags: List[str]
     nodes: List[Dict[str, Any]] = []
+
+    @property
+    def effective_severity(self) -> str:
+        """Get the effective severity level (prefers severity over impact)."""
+        if self.severity:
+            return self.severity
+        # Fallback mapping from old impact to new severity
+        impact_to_severity = {
+            "critical": "error",
+            "serious": "error",
+            "moderate": "warning",
+            "minor": "alert"
+        }
+        return impact_to_severity.get(self.impact.value, "warning")
 
 
 class PageResult(BaseModel):
@@ -92,10 +114,20 @@ class ScanResult(BaseModel):
         return None
 
     def get_violations_by_impact(self) -> Dict[str, int]:
-        """Get count of violations grouped by impact level."""
+        """Get count of violations grouped by impact level (deprecated)."""
         counts = {impact.value: 0 for impact in ViolationImpact}
         for page in self.page_results:
             for violation in page.violations:
                 counts[violation.impact.value] += 1
+        return counts
+
+    def get_violations_by_severity(self) -> Dict[str, int]:
+        """Get count of violations grouped by severity level."""
+        counts = {"error": 0, "warning": 0, "alert": 0}
+        for page in self.page_results:
+            for violation in page.violations:
+                severity = violation.effective_severity
+                if severity in counts:
+                    counts[severity] += 1
         return counts
 

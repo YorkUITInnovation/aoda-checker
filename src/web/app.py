@@ -161,7 +161,8 @@ async def get_scan_status(scan_id: str):
         "pages_scanned": result.pages_scanned,
         "pages_with_violations": result.pages_with_violations,
         "total_violations": result.total_violations,
-        "violations_by_impact": result.get_violations_by_impact(),
+        "violations_by_impact": result.get_violations_by_impact(),  # Deprecated
+        "violations_by_severity": result.get_violations_by_severity(),  # New
         "start_time": result.start_time.isoformat(),
         "end_time": result.end_time.isoformat() if result.end_time else None,
         "duration": result.duration
@@ -224,7 +225,8 @@ async def results_page(
             "request": request,
             "current_user": current_user,
             "scan_result": result,
-            "violations_by_impact": result.get_violations_by_impact()
+            "violations_by_impact": result.get_violations_by_impact(),  # Keep for backward compatibility
+            "violations_by_severity": result.get_violations_by_severity()  # New severity-based counts
         }
     )
 
@@ -245,6 +247,10 @@ app.include_router(auth_router)
 # Include admin routes
 from src.web.admin_routes import router as admin_router
 app.include_router(admin_router)
+
+# Include check configuration routes
+from src.web.check_config_routes import router as check_config_router
+app.include_router(check_config_router)
 
 # Include history routes
 from src.web.history_routes import router as history_router

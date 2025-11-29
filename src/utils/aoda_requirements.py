@@ -181,3 +181,38 @@ def get_axe_config_for_scan_mode(scan_mode: str):
     else:
         return get_wcag21_axe_config()
 
+
+async def get_check_configs_from_db():
+    """
+    Get check configurations from database.
+
+    Returns:
+        dict: Dictionary mapping check_id to configuration
+    """
+    from src.database import get_db_session
+    from src.database.check_repository import CheckConfigRepository
+
+    configs = {}
+
+    try:
+        async with get_db_session() as db:
+            repo = CheckConfigRepository(db)
+            checks = await repo.get_all_checks()
+
+            for check in checks:
+                configs[check.check_id] = {
+                    'enabled': check.enabled,
+                    'severity': check.severity.value,
+                    'wcag_criterion': check.wcag_criterion,
+                    'wcag_level': check.wcag_level,
+                    'aoda_required': check.aoda_required,
+                    'wcag21_only': check.wcag21_only,
+                    'check_type': check.check_type
+                }
+    except Exception as e:
+        # If database is not available or table doesn't exist, use defaults
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Could not load check configurations from database: {e}")
+
+    return configs

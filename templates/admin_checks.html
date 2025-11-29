@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Check Configuration - AODA Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #0052a5;
+            --secondary-color: #e31837;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #003d7a 100%);
+        }
+
+        .check-row {
+            transition: background-color 0.2s;
+        }
+
+        .check-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .severity-badge {
+            min-width: 80px;
+        }
+
+        .wcag-badge {
+            font-size: 0.75rem;
+        }
+
+        .filter-section {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .enabled-switch {
+            width: 3rem;
+            height: 1.5rem;
+        }
+
+        .table-actions {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-universal-access-circle me-2"></i>
+                AODA Accessibility Checker
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house-door me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history">
+                            <i class="bi bi-clock-history me-1"></i>History
+                        </a>
+                    </li>
+                    {% if current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/users">
+                            <i class="bi bi-people me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/checks">
+                            <i class="bi bi-gear me-1"></i>Check Config
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">
+                            <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="bi bi-box-arrow-right me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="h3">
+                    <i class="bi bi-gear-fill me-2"></i>
+                    Accessibility Check Configuration
+                </h1>
+                <p class="text-muted">Configure which accessibility checks are enabled and their severity levels.</p>
+            </div>
+            <div class="col-auto">
+                <button id="initializeBtn" class="btn btn-primary">
+                    <i class="bi bi-arrow-clockwise me-2"></i>
+                    Initialize Default Checks
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Filter by Status</label>
+                    <select id="filterStatus" class="form-select">
+                        <option value="all">All Checks</option>
+                        <option value="enabled">Enabled Only</option>
+                        <option value="disabled">Disabled Only</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Filter by Severity</label>
+                    <select id="filterSeverity" class="form-select">
+                        <option value="all">All Severities</option>
+                        <option value="error">Error</option>
+                        <option value="warning">Warning</option>
+                        <option value="alert">Alert</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Filter by WCAG Level</label>
+                    <select id="filterWCAG" class="form-select">
+                        <option value="all">All Levels</option>
+                        <option value="A">Level A</option>
+                        <option value="AA">Level AA</option>
+                        <option value="AAA">Level AAA</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search checks...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Checks Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="checksTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%">Enabled</th>
+                                <th style="width: 25%">Check Name</th>
+                                <th style="width: 30%">Description</th>
+                                <th style="width: 10%">Severity</th>
+                                <th style="width: 10%">WCAG</th>
+                                <th style="width: 10%">Type</th>
+                                <th style="width: 10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checksTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Check Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editCheckId">
+                        <div class="mb-3">
+                            <label class="form-label">Check Name</label>
+                            <input type="text" id="editCheckName" class="form-control" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editEnabled">
+                                <label class="form-check-label" for="editEnabled">Enabled</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Severity</label>
+                            <select id="editSeverity" class="form-select">
+                                <option value="error">Error</option>
+                                <option value="warning">Warning</option>
+                                <option value="alert">Alert</option>
+                                <option value="disabled">Disabled</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let allChecks = [];
+        let editModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            loadChecks();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('initializeBtn').addEventListener('click', initializeChecks);
+            document.getElementById('saveBtn').addEventListener('click', saveCheck);
+            document.getElementById('filterStatus').addEventListener('change', filterChecks);
+            document.getElementById('filterSeverity').addEventListener('change', filterChecks);
+            document.getElementById('filterWCAG').addEventListener('change', filterChecks);
+            document.getElementById('searchInput').addEventListener('input', filterChecks);
+        }
+
+        async function loadChecks() {
+            try {
+                console.log('Fetching checks from API...');
+                const response = await fetch('/api/admin/checks/');
+                if (!response.ok) throw new Error('Failed to load checks');
+
+                allChecks = await response.json();
+                console.log(`Loaded ${allChecks.length} checks from API:`, allChecks.map(c => c.check_id));
+                renderChecks(allChecks);
+            } catch (error) {
+                console.error('Error loading checks:', error);
+                showAlert('Failed to load checks', 'danger');
+            }
+        }
+
+        // Escape HTML to prevent XSS and template literal breaks
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderChecks(checks) {
+            const tbody = document.getElementById('checksTableBody');
+
+            console.log(`Rendering ${checks.length} checks`);
+
+            if (checks.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            No checks found. Click "Initialize Default Checks" to load default configuration.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            try {
+                tbody.innerHTML = checks.map((check, index) => {
+                    try {
+                        // Escape all text values to prevent template literal breaks
+                        const safeCheckId = escapeHtml(check.check_id);
+                        const safeName = escapeHtml(check.check_name);
+                        const safeDesc = escapeHtml(check.description || 'No description');
+                        const safeSeverity = escapeHtml(check.severity);
+                        const safeType = escapeHtml(check.check_type);
+                        const safeWcagCrit = escapeHtml(check.wcag_criterion);
+                        const safeWcagLevel = escapeHtml(check.wcag_level);
+                        const safeHelpUrl = check.help_url || '';
+
+                        return `
+                <tr class="check-row" data-check-id="${safeCheckId}">
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input enabled-switch" type="checkbox"
+                                   ${check.enabled ? 'checked' : ''}
+                                   onchange="toggleCheck('${safeCheckId}', this.checked)">
+                        </div>
+                    </td>
+                    <td>
+                        <strong>${safeName}</strong>
+                        <br>
+                        <small class="text-muted">${safeCheckId}</small>
+                    </td>
+                    <td>
+                        <small>${safeDesc}</small>
+                    </td>
+                    <td>
+                        <span class="badge severity-badge ${getSeverityClass(check.severity)}">
+                            ${safeSeverity.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        ${check.wcag_criterion ? `
+                            <span class="badge bg-info wcag-badge">
+                                ${safeWcagCrit} (${safeWcagLevel})
+                            </span>
+                            ${check.aoda_required ? '<br><span class="badge bg-success wcag-badge mt-1">AODA Required</span>' : ''}
+                        ` : '<span class="text-muted">N/A</span>'}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">${safeType}</span>
+                    </td>
+                    <td class="table-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="editCheck('${safeCheckId}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        ${safeHelpUrl ? `
+                            <a href="${safeHelpUrl}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+                    } catch (err) {
+                        console.error(`Error rendering check ${index}:`, check, err);
+                        const safeCheckId = escapeHtml(check.check_id || 'unknown');
+                        const safeErrMsg = escapeHtml(err.message);
+                        return `
+                            <tr>
+                                <td colspan="7" class="text-danger">
+                                    Error rendering check: ${safeCheckId} - ${safeErrMsg}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }).join('');
+                console.log(`Successfully rendered ${checks.length} check rows`);
+            } catch (err) {
+                console.error('Error in renderChecks:', err);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-danger">
+                            Error rendering checks: ${err.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function getSeverityClass(severity) {
+            const classes = {
+                'error': 'bg-danger',
+                'warning': 'bg-warning text-dark',
+                'alert': 'bg-info',
+                'disabled': 'bg-secondary'
+            };
+            return classes[severity] || 'bg-secondary';
+        }
+
+        function filterChecks() {
+            const status = document.getElementById('filterStatus').value;
+            const severity = document.getElementById('filterSeverity').value;
+            const wcag = document.getElementById('filterWCAG').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = allChecks.filter(check => {
+                if (status !== 'all' && ((status === 'enabled') !== check.enabled)) return false;
+                if (severity !== 'all' && check.severity !== severity) return false;
+                if (wcag !== 'all' && check.wcag_level !== wcag) return false;
+                if (search && !check.check_name.toLowerCase().includes(search) &&
+                    !check.check_id.toLowerCase().includes(search)) return false;
+                return true;
+            });
+
+            renderChecks(filtered);
+        }
+
+        async function toggleCheck(checkId, enabled) {
+            const check = allChecks.find(c => c.check_id === checkId);
+            if (!check) return;
+
+            try {
+                const response = await fetch(`/api/admin/checks/${checkId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        enabled: enabled,
+                        severity: check.severity
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to update check');
+
+                check.enabled = enabled;
+                showAlert(`Check ${enabled ? 'enabled' : 'disabled'} successfully`, 'success');
+            } catch (error) {
+                console.error('Error updating check:', error);
+                showAlert('Failed to update check', 'danger');
+                loadChecks(); // Reload to reset state
+            }
+        }
+
+        function editCheck(checkId) {
+            const check = allChecks.find(c => c.check_id === checkId);
+            if (!check) return;
+
+            document.getElementById('editCheckId').value = check.check_id;
+            document.getElementById('editCheckName').value = check.check_name;
+            document.getElementById('editEnabled').checked = check.enabled;
+            document.getElementById('editSeverity').value = check.severity;
+
+            editModal.show();
+        }
+
+        async function saveCheck() {
+            const checkId = document.getElementById('editCheckId').value;
+            const enabled = document.getElementById('editEnabled').checked;
+            const severity = document.getElementById('editSeverity').value;
+
+            try {
+                const response = await fetch(`/api/admin/checks/${checkId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled, severity })
+                });
+
+                if (!response.ok) throw new Error('Failed to save check');
+
+                const check = allChecks.find(c => c.check_id === checkId);
+                if (check) {
+                    check.enabled = enabled;
+                    check.severity = severity;
+                }
+
+                editModal.hide();
+                renderChecks(allChecks);
+                showAlert('Check configuration saved successfully', 'success');
+            } catch (error) {
+                console.error('Error saving check:', error);
+                showAlert('Failed to save check configuration', 'danger');
+            }
+        }
+
+        async function initializeChecks() {
+            if (!confirm('This will initialize default check configurations. Continue?')) return;
+
+            try {
+                const response = await fetch('/api/admin/checks/initialize', {
+                    method: 'POST'
+                });
+
+                if (!response.ok) throw new Error('Failed to initialize checks');
+
+                showAlert('Default checks initialized successfully', 'success');
+                loadChecks();
+            } catch (error) {
+                console.error('Error initializing checks:', error);
+                showAlert('Failed to initialize checks', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
+
