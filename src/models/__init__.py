@@ -113,6 +113,65 @@ class ScanResult(BaseModel):
             return (self.end_time - self.start_time).total_seconds()
         return None
 
+    @property
+    def estimated_time_remaining(self) -> Optional[float]:
+        """
+        Estimate remaining scan time in seconds.
+
+        Returns:
+            Estimated seconds remaining, or None if cannot be calculated
+        """
+        if self.status == "completed" or self.status == "failed":
+            return 0.0
+
+        if self.pages_scanned == 0:
+            return None  # Can't estimate with no data
+
+        # Calculate elapsed time
+        elapsed = (datetime.now() - self.start_time).total_seconds()
+
+        # Calculate average time per page
+        avg_time_per_page = elapsed / self.pages_scanned
+
+        # Calculate remaining pages
+        remaining_pages = self.max_pages - self.pages_scanned
+
+        if remaining_pages <= 0:
+            return 0.0
+
+        # Estimate time remaining
+        return remaining_pages * avg_time_per_page
+
+    @property
+    def estimated_time_remaining_formatted(self) -> Optional[str]:
+        """
+        Get estimated time remaining in human-readable format.
+
+        Returns:
+            String like "2m 30s" or "1h 15m", or None if cannot be calculated
+        """
+        seconds = self.estimated_time_remaining
+        if seconds is None:
+            return None
+
+        if seconds == 0:
+            return "Completing..."
+
+        # Convert to minutes and seconds
+        minutes = int(seconds // 60)
+        secs = int(seconds % 60)
+
+        if minutes >= 60:
+            hours = minutes // 60
+            minutes = minutes % 60
+            if minutes > 0:
+                return f"{hours}h {minutes}m"
+            return f"{hours}h"
+        elif minutes > 0:
+            return f"{minutes}m {secs}s"
+        else:
+            return f"{secs}s"
+
     def get_violations_by_impact(self) -> Dict[str, int]:
         """Get count of violations grouped by impact level (deprecated)."""
         counts = {impact.value: 0 for impact in ViolationImpact}

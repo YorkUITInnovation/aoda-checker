@@ -269,7 +269,9 @@ async def get_scan_status(scan_id: str, db: AsyncSession = Depends(get_db)):
         "violations_by_severity": result.get_violations_by_severity(),  # New
         "start_time": result.start_time.isoformat(),
         "end_time": result.end_time.isoformat() if result.end_time else None,
-        "duration": result.duration
+        "duration": result.duration,
+        "estimated_time_remaining": result.estimated_time_remaining,
+        "estimated_time_remaining_formatted": result.estimated_time_remaining_formatted
     }
 
     # Include error message if scan failed

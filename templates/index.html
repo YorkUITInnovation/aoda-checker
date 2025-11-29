@@ -310,6 +310,12 @@
                                         <div id="progressText" class="text-center mb-2">
                                             <strong>Initializing scan...</strong>
                                         </div>
+                                        <div class="text-center mb-2">
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock"></i>
+                                                <span id="estimatedTime">Calculating...</span>
+                                            </small>
+                                        </div>
                                         <div class="progress" style="height: 25px;">
                                             <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
                                                  role="progressbar" style="width: 0%">
@@ -376,6 +382,8 @@
         const progressPercent = document.getElementById('progressPercent');
         const pagesScanned = document.getElementById('pagesScanned');
         const issuesFound = document.getElementById('issuesFound');
+        const estimatedTime = document.getElementById('estimatedTime');
+
 
         scanForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -398,6 +406,7 @@
             progressPercent.textContent = '10%';
             pagesScanned.textContent = '0';
             issuesFound.textContent = '0';
+            estimatedTime.textContent = 'Calculating...';
 
             try {
                 const response = await fetch('/api/scan', {
@@ -444,6 +453,15 @@
                     const progress = Math.min(30 + (data.pages_scanned * 3), 90);
                     progressBar.style.width = `${progress}%`;
                     progressPercent.textContent = `${progress}%`;
+
+                    // Update estimated time remaining
+                    if (data.estimated_time_remaining_formatted) {
+                        estimatedTime.textContent = `Estimated time remaining: ${data.estimated_time_remaining_formatted}`;
+                    } else if (data.pages_scanned === 0) {
+                        estimatedTime.textContent = 'Calculating...';
+                    } else {
+                        estimatedTime.textContent = 'Completing...';
+                    }
 
                     // Update status text
                     progressText.innerHTML = `<strong>Scanning:</strong> ${data.pages_scanned} pages analyzed, ${data.total_violations} issues found`;
@@ -505,6 +523,13 @@
                     const initialProgress = Math.min(30 + ((scanData.pages_scanned || 0) * 3), 90);
                     progressBar.style.width = `${initialProgress}%`;
                     progressPercent.textContent = `${initialProgress}%`;
+
+                    // Set initial estimated time
+                    if (scanData.estimated_time_remaining_formatted) {
+                        estimatedTime.textContent = `Estimated time remaining: ${scanData.estimated_time_remaining_formatted}`;
+                    } else {
+                        estimatedTime.textContent = 'Calculating...';
+                    }
 
                     // Show progress section
                     progressSection.style.display = 'block';
