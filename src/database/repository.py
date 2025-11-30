@@ -229,26 +229,59 @@ class ScanRepository:
             return True
         return False
 
-    async def get_scan_statistics(self) -> dict:
-        """Get overall statistics."""
-        # Total scans
-        total_result = await self.session.execute(
-            select(func.count(Scan.id))
-        )
-        total_scans = total_result.scalar()
+    async def get_scan_statistics(self, user_id: Optional[int] = None) -> dict:
+        """
+        Get scan statistics.
 
-        # Scans by status
-        status_result = await self.session.execute(
-            select(Scan.status, func.count(Scan.id))
-            .group_by(Scan.status)
-        )
-        scans_by_status = dict(status_result.all())
+        Args:
+            user_id: If provided, get statistics only for this user.
+                    If None, get site-wide statistics.
 
-        # Total violations
-        violations_result = await self.session.execute(
-            select(func.sum(Scan.total_violations))
-        )
-        total_violations = violations_result.scalar() or 0
+        Returns:
+            Dictionary with total_scans, scans_by_status, and total_violations
+        """
+        # Build base query with optional user filter
+        if user_id is not None:
+            # User-specific statistics
+            total_result = await self.session.execute(
+                select(func.count(Scan.id))
+                .where(Scan.user_id == user_id)
+            )
+            total_scans = total_result.scalar()
+
+            # Scans by status for this user
+            status_result = await self.session.execute(
+                select(Scan.status, func.count(Scan.id))
+                .where(Scan.user_id == user_id)
+                .group_by(Scan.status)
+            )
+            scans_by_status = dict(status_result.all())
+
+            # Total violations for this user
+            violations_result = await self.session.execute(
+                select(func.sum(Scan.total_violations))
+                .where(Scan.user_id == user_id)
+            )
+            total_violations = violations_result.scalar() or 0
+        else:
+            # Site-wide statistics (admin view)
+            total_result = await self.session.execute(
+                select(func.count(Scan.id))
+            )
+            total_scans = total_result.scalar()
+
+            # Scans by status
+            status_result = await self.session.execute(
+                select(Scan.status, func.count(Scan.id))
+                .group_by(Scan.status)
+            )
+            scans_by_status = dict(status_result.all())
+
+            # Total violations
+            violations_result = await self.session.execute(
+                select(func.sum(Scan.total_violations))
+            )
+            total_violations = violations_result.scalar() or 0
 
         return {
             "total_scans": total_scans,

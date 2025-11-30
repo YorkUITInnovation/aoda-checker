@@ -532,12 +532,23 @@ from src.web.admin_routes import router as admin_router
 app.include_router(admin_router)
 
 # Include check configuration routes
-from src.web.check_config_routes import router as check_config_router
+from src.web.check_config_routes import router as check_config_router, user_router as user_check_router
 app.include_router(check_config_router)
+app.include_router(user_check_router)
 
 # Include history routes
 from src.web.history_routes import router as history_router
 app.include_router(history_router)
+
+
+@app.get("/checks", response_class=HTMLResponse)
+async def user_checks_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the user check configuration page."""
+    return templates.TemplateResponse("user_checks.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "user-checks"
+    })
 
 
 @app.get("/health")
@@ -549,4 +560,3 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=settings.host, port=settings.port)
-

@@ -245,3 +245,27 @@ class CheckConfiguration(Base):
     def __repr__(self):
         return f"<CheckConfiguration(check_id={self.check_id}, enabled={self.enabled}, severity={self.severity})>"
 
+
+class UserCheckConfiguration(Base):
+    """User-specific overrides for check configurations."""
+    __tablename__ = "user_check_configurations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    check_id = Column(String(128), ForeignKey("check_configurations.check_id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # User-specific settings (override defaults)
+    enabled = Column(Boolean, default=True, nullable=False)
+    severity = Column(Enum(CheckSeverity), default=CheckSeverity.ERROR, nullable=False)
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", backref="check_configurations")
+    check = relationship("CheckConfiguration")
+
+    def __repr__(self):
+        return f"<UserCheckConfiguration(user_id={self.user_id}, check_id={self.check_id}, enabled={self.enabled})>"
+

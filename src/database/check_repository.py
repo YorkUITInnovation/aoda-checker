@@ -1,10 +1,10 @@
 """Repository for check configuration operations."""
 from typing import List, Optional, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete, and_
 from sqlalchemy.exc import IntegrityError
 
-from src.database.models import CheckConfiguration, CheckSeverity
+from src.database.models import CheckConfiguration, CheckSeverity, UserCheckConfiguration
 
 
 class CheckConfigRepository:
@@ -95,6 +95,125 @@ class CheckConfigRepository:
             existing = await self.get_check_by_id(check_data["check_id"])
             if not existing:
                 await self.create_check(**check_data)
+
+    # User-specific check configuration methods
+
+    async def get_user_checks(self, user_id: int) -> List[Dict]:
+        """
+        Get all checks with user-specific overrides applied.
+        Returns list of dicts with check data and user preferences.
+        """
+        # Get all check configurations
+        base_checks = await self.get_all_checks()
+
+        # Get user's overrides
+        result = await self.db.execute(
+            select(UserCheckConfiguration).where(UserCheckConfiguration.user_id == user_id)
+        )
+        user_overrides = {uc.check_id: uc for uc in result.scalars().all()}
+
+        # Merge base checks with user overrides
+        checks = []
+        for check in base_checks:
+            user_override = user_overrides.get(check.check_id)
+            checks.append({
+                "id": check.id,
+                "check_id": check.check_id,
+                "check_name": check.check_name,
+                "description": check.description,
+                "enabled": user_override.enabled if user_override else check.enabled,
+                "severity": user_override.severity.value if user_override else check.severity.value,
+                "wcag_criterion": check.wcag_criterion,
+                "wcag_level": check.wcag_level,
+                "aoda_required": check.aoda_required,
+                "wcag21_only": check.wcag21_only,
+                "check_type": check.check_type,
+                "help_url": check.help_url,
+                "has_user_override": user_override is not None
+            })
+
+        return checks
+
+    async def get_enabled_checks_for_user(self, user_id: int) -> List[str]:
+        """
+        Get list of enabled check IDs for a specific user.
+        Returns check_ids that are enabled (considering user overrides).
+        """
+        checks = await self.get_user_checks(user_id)
+        return [check["check_id"] for check in checks if check["enabled"]]
+
+    async def update_user_check(
+        self,
+        user_id: int,
+        check_id: str,
+        enabled: Optional[bool] = None,
+        severity: Optional[CheckSeverity] = None
+    ) -> UserCheckConfiguration:
+        """
+        Update or create a user-specific check configuration override.
+        """
+        # Check if override already exists
+        result = await self.db.execute(
+            select(UserCheckConfiguration).where(
+                and_(
+                    UserCheckConfiguration.user_id == user_id,
+                    UserCheckConfiguration.check_id == check_id
+                )
+            )
+        )
+        user_check = result.scalar_one_or_none()
+
+        if user_check:
+            # Update existing override
+            if enabled is not None:
+                user_check.enabled = enabled
+            if severity is not None:
+                user_check.severity = severity
+        else:
+            # Create new override
+            # First verify the base check exists
+            base_check = await self.get_check_by_id(check_id)
+            if not base_check:
+                raise ValueError(f"Check {check_id} does not exist")
+
+            user_check = UserCheckConfiguration(
+                user_id=user_id,
+                check_id=check_id,
+                enabled=enabled if enabled is not None else base_check.enabled,
+                severity=severity if severity is not None else base_check.severity
+            )
+            self.db.add(user_check)
+
+        await self.db.commit()
+        await self.db.refresh(user_check)
+        return user_check
+
+    async def reset_user_check(self, user_id: int, check_id: str) -> bool:
+        """
+        Reset a user's check configuration to default (remove override).
+        Returns True if an override was deleted, False if none existed.
+        """
+        result = await self.db.execute(
+            delete(UserCheckConfiguration).where(
+                and_(
+                    UserCheckConfiguration.user_id == user_id,
+                    UserCheckConfiguration.check_id == check_id
+                )
+            )
+        )
+        await self.db.commit()
+        return result.rowcount > 0
+
+    async def reset_all_user_checks(self, user_id: int) -> int:
+        """
+        Reset all of a user's check configurations to defaults.
+        Returns number of overrides deleted.
+        """
+        result = await self.db.execute(
+            delete(UserCheckConfiguration).where(UserCheckConfiguration.user_id == user_id)
+        )
+        await self.db.commit()
+        return result.rowcount
 
 
 def get_default_check_configurations() -> List[Dict]:

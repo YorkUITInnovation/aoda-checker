@@ -91,9 +91,17 @@ async def get_statistics(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get overall scan statistics."""
+    """
+    Get scan statistics.
+
+    - Regular users: See only their own statistics
+    - Admins: See site-wide statistics
+    """
     repo = ScanRepository(db)
-    stats = await repo.get_scan_statistics()
+
+    # Non-admin users only see their own statistics
+    user_id = None if current_user.is_admin else current_user.id
+    stats = await repo.get_scan_statistics(user_id=user_id)
 
     # Convert enum keys to strings
     scans_by_status = {
@@ -104,7 +112,8 @@ async def get_statistics(
     return {
         "total_scans": stats["total_scans"],
         "scans_by_status": scans_by_status,
-        "total_violations": stats["total_violations"]
+        "total_violations": stats["total_violations"],
+        "is_user_specific": not current_user.is_admin  # Indicator for frontend
     }
 
 
