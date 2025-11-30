@@ -225,11 +225,6 @@
                             </p>
                         </div>
                         <div>
-                            <a href="/api/scan/{{ scan_result.scan_id }}/download/docx"
-                               class="btn btn-success me-2"
-                               download>
-                                <i class="bi bi-file-earmark-word"></i> Download Report (DOCX)
-                            </a>
                             <a href="/" class="btn btn-outline-primary me-2">
                                 <i class="bi bi-plus-circle"></i> New Scan
                             </a>
@@ -302,6 +297,18 @@
                     <button onclick="window.print()" class="btn btn-secondary" aria-label="Print scan results">
                         <i class="bi bi-printer" aria-hidden="true"></i> Print Results
                     </button>
+                    <a href="/api/scan/{{ scan_result.scan_id }}/download/docx"
+                       class="btn btn-success"
+                       download
+                       aria-label="Download report as DOCX file">
+                        <i class="bi bi-file-earmark-word" aria-hidden="true"></i> Download Report (DOCX)
+                    </a>
+                    <a href="/api/scan/{{ scan_result.scan_id }}/download/xlsx"
+                       class="btn btn-primary"
+                       download
+                       aria-label="Download report as Excel file">
+                        <i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Download Excel (XLSX)
+                    </a>
                 </nav>
             </div>
         </div>

@@ -348,6 +348,62 @@ async def download_docx_report(
         raise HTTPException(status_code=500, detail="Failed to generate report")
 
 
+@app.get("/api/scan/{scan_id}/download/xlsx")
+async def download_xlsx_report(
+    scan_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Download scan results as an Excel (XLSX) report."""
+    from fastapi.responses import StreamingResponse
+    from src.utils.excel_report import generate_excel_report
+
+    # Try to get from memory first
+    result = scan_results.get(scan_id)
+
+    # If not in memory, try database
+    if not result:
+        try:
+            repo = ScanRepository(db)
+            db_scan = await repo.get_scan_by_id(scan_id)
+
+            if not db_scan:
+                raise HTTPException(status_code=404, detail="Scan not found")
+
+            # Check permissions
+            if not current_user.is_admin and db_scan.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied")
+
+            result = await repo.convert_to_scan_result(db_scan)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error loading scan for XLSX download: {e}")
+            raise HTTPException(status_code=404, detail="Scan not found")
+
+    # Generate Excel report
+    try:
+        excel_file = generate_excel_report(result)
+
+        # Create filename
+        from urllib.parse import urlparse
+        domain = urlparse(result.start_url).netloc or 'scan'
+        safe_domain = domain.replace('.', '_').replace(':', '_')
+        timestamp = result.start_time.strftime('%Y%m%d_%H%M%S')
+        filename = f"accessibility_report_{safe_domain}_{timestamp}.xlsx"
+
+        return StreamingResponse(
+            excel_file,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error generating Excel report: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate Excel report")
+
+
 @app.get("/api/discover-urls")
 async def discover_urls_endpoint(
     url: str,
