@@ -347,6 +347,70 @@ async def download_docx_report(
         raise HTTPException(status_code=500, detail="Failed to generate report")
 
 
+@app.get("/api/discover-urls")
+async def discover_urls_endpoint(
+    url: str,
+    max_depth: int = 2,
+    max_pages: int = 100,
+    same_domain_only: bool = True,
+    restrict_to_path: bool = True,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Discover all URLs on a website without scanning.
+
+    Query Parameters:
+        url: Starting URL to discover from
+        max_depth: Maximum depth to crawl (1-10, default 2)
+        max_pages: Maximum pages to discover (1-10000, default 100)
+        same_domain_only: Only discover URLs on same domain (default true)
+        restrict_to_path: Only discover URLs within starting path (default true)
+    """
+    from src.utils.url_discovery import discover_urls
+
+    # Validate max_depth
+    if max_depth < 1 or max_depth > 10:
+        raise HTTPException(status_code=400, detail="max_depth must be between 1 and 10")
+
+    # Validate max_pages
+    if max_pages < 1 or max_pages > 10000:
+        raise HTTPException(status_code=400, detail="max_pages must be between 1 and 10000")
+
+    # Validate URL
+    try:
+        from pydantic import HttpUrl
+        HttpUrl(url)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid URL format")
+
+    logger.info(f"URL discovery requested by {current_user.username} for {url} (max_depth={max_depth}, max_pages={max_pages})")
+
+    try:
+        result = await discover_urls(
+            url=url,
+            max_depth=max_depth,
+            max_pages=max_pages,
+            same_domain_only=same_domain_only,
+            restrict_to_path=restrict_to_path
+        )
+        return result
+    except Exception as e:
+        logger.error(f"URL discovery failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"URL discovery failed: {str(e)}")
+
+
+@app.get("/discover", response_class=HTMLResponse)
+async def discover_page(
+    request: Request,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Render the URL discovery page."""
+    return templates.TemplateResponse("discover.html", {
+        "request": request,
+        "current_user": current_user
+    })
+
+
 @app.get("/results/{scan_id}", response_class=HTMLResponse)
 async def results_page(
     request: Request,
