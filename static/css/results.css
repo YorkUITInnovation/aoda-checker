@@ -1,0 +1,92 @@
+/*
+ * Results Page Styles
+ * Used by: results.html
+ */
+
+/* Stat Cards */
+.stat-card {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+}
+
+/* Use lighter backgrounds for detailed results (better visibility) */
+.page-card .bg-warning,
+.violation-card .bg-warning {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+}
+
+.page-card .badge.bg-warning,
+.violation-card .badge.bg-warning {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+}
+
+.page-card .bg-info,
+.violation-card .bg-info {
+    background-color: #d1ecf1 !important;
+    color: #0c5460 !important;
+}
+
+.page-card .badge.bg-info,
+.violation-card .badge.bg-info {
+    background-color: #d1ecf1 !important;
+    color: #0c5460 !important;
+}
+
+.page-card .border-warning,
+.violation-card.border-warning {
+    border-color: #ffc107 !important;
+}
+
+.page-card .border-info,
+.violation-card.border-info {
+    border-color: #0dcaf0 !important;
+}
+
+/* Page Card Hover Effects */
+.page-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.page-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Violation Cards */
+.violation-card {
+    border-left-width: 4px;
+}
+
+.impact-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+}
+
+/* Make SERIOUS badges stand out more in detailed results */
+.violation-card .badge.badge-serious {
+    background-color: #ff8c00 !important;
+    color: white !important;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(255, 140, 0, 0.3);
+}
+
+/* Print Styles */
+@media print {
+    .navbar,
+    .sidebar,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        padding-left: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .card {
+        page-break-inside: avoid;
+    }
+}
+
