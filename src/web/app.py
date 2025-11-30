@@ -71,6 +71,37 @@ static_dir = Path("static")
 static_dir.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+# Custom exception handler for 401 Unauthorized
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions, redirecting to login for 401 on HTML pages."""
+    if exc.status_code == 401:
+        # Check if this is an API request or a page request
+        is_api_request = (
+            request.url.path.startswith('/api/') or
+            'application/json' in request.headers.get('accept', '').lower() or
+            'application/json' in request.headers.get('content-type', '').lower()
+        )
+
+        if not is_api_request:
+            # For HTML page requests, redirect to login
+            next_url = str(request.url.path)
+            if request.url.query:
+                next_url += f"?{request.url.query}"
+            return RedirectResponse(
+                url=f"/login?next={next_url}",
+                status_code=303
+            )
+
+    # For API requests or other status codes, return JSON error
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+
+
 # In-memory storage for active scan results (will also persist to database)
 scan_results: Dict[str, ScanResult] = {}
 

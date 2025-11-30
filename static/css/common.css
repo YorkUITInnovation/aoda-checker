@@ -35,19 +35,147 @@ body {
     left: 0;
     background: #000;
     color: #fff;
-    padding: 8px;
+    padding: 8px 16px;
     text-decoration: none;
-    z-index: 100;
+    z-index: 10000;
+    font-weight: 600;
 }
 
 .skip-link:focus {
     top: 0;
+    outline: 3px solid #fff;
+    outline-offset: 2px;
 }
 
-/* Improved focus visibility */
-a:focus, button:focus, input:focus, select:focus, textarea:focus {
+/* Enhanced Focus Indicators for WCAG 2.2 AA Compliance */
+/* SC 2.4.11 Focus Appearance (Minimum) - Level AA */
+/* SC 2.4.13 Focus Appearance (Enhanced) - Level AAA (implementing as best practice) */
+
+/* Default focus style for all interactive elements */
+*:focus {
     outline: 3px solid #0d6efd;
     outline-offset: 2px;
+}
+
+/* Remove outline for mouse/touch users (but keep for keyboard users) */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Enhanced focus for keyboard users */
+*:focus-visible {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Specific focus styles for buttons */
+.btn:focus,
+.btn:focus-visible {
+    outline: 3px solid #0d6efd !important;
+    outline-offset: 2px;
+    box-shadow: none !important;
+}
+
+.btn-primary:focus,
+.btn-primary:focus-visible {
+    outline-color: #0a58ca !important;
+}
+
+.btn-danger:focus,
+.btn-danger:focus-visible {
+    outline-color: #b02a37 !important;
+}
+
+.btn-success:focus,
+.btn-success:focus-visible {
+    outline-color: #146c43 !important;
+}
+
+/* Specific focus for form controls */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: #0d6efd;
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+    box-shadow: none !important;
+}
+
+/* Links focus */
+a:focus-visible {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+    text-decoration: underline;
+}
+
+/* Card focus (for interactive cards) */
+.card:focus-visible {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Table row focus */
+tr:focus-visible {
+    outline: 3px solid #0d6efd;
+    outline-offset: -3px;
+}
+
+/* Nav link focus */
+.nav-link:focus-visible {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Minimum Target Size - WCAG 2.2 SC 2.5.8 (Level AA) */
+/* Ensure all interactive elements are at least 24x24 CSS pixels */
+/* Exception: inline links in text blocks */
+
+.btn,
+.btn-sm {
+    min-height: 44px; /* Recommended minimum for better usability */
+    min-width: 44px;
+    padding: 0.5rem 1rem;
+}
+
+.btn-lg {
+    min-height: 48px;
+}
+
+/* Icon buttons */
+.btn-icon,
+button[aria-label]:not(.btn-lg):not(.btn-sm) {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Form controls minimum height */
+.form-control,
+.form-select {
+    min-height: 44px;
+}
+
+/* Checkbox and radio minimum size */
+.form-check-input {
+    min-width: 24px;
+    min-height: 24px;
+    margin-top: 0.125rem; /* Align with text */
+}
+
+/* Link targets in navigation */
+.nav-link,
+.navbar-nav .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+/* Pagination and small buttons */
+.pagination .page-link {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Card Styling */

@@ -15,29 +15,29 @@
             <!-- Right side: User menu and Help -->
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <span class="nav-link">
-                        Welcome, <strong>{{ current_user.username }}</strong>
+                    <span class="nav-link" role="status" aria-label="Current user: {{ current_user.username }}{% if current_user.is_admin %}, Administrator{% endif %}">
+                        <span aria-hidden="true">Welcome, <strong>{{ current_user.username }}</strong></span>
                         {% if current_user.is_admin %}
-                        <span class="badge bg-primary ms-1">Admin</span>
+                        <span class="badge bg-primary ms-1" aria-hidden="true">Admin</span>
                         {% endif %}
                     </span>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'help' else '' }}" href="/help" title="Help & User Guides">
-                        <i class="bi bi-question-circle"></i>
-                        <span class="d-lg-none">Help</span>
+                    <a class="nav-link {{ 'active' if active_page == 'help' else '' }}" href="/help" aria-label="Help and User Guides">
+                        <i class="bi bi-question-circle" aria-hidden="true"></i>
+                        <span class="navbar-text-visible">Help</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'profile' else '' }}" href="/profile">
-                        <i class="bi bi-person-circle"></i>
-                        <span class="d-lg-none">Profile</span>
+                    <a class="nav-link {{ 'active' if active_page == 'profile' else '' }}" href="/profile" aria-label="My Profile">
+                        <i class="bi bi-person-circle" aria-hidden="true"></i>
+                        <span class="navbar-text-visible">Profile</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/logout">
-                        <i class="bi bi-box-arrow-right"></i>
-                        <span class="d-lg-none">Logout</span>
+                    <a class="nav-link" href="/logout" aria-label="Logout">
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        <span class="navbar-text-visible">Logout</span>
                     </a>
                 </li>
             </ul>
@@ -80,6 +80,22 @@
     @media (min-width: 992px) {
         .navbar-nav .nav-link i {
             font-size: 1.25rem;
+        }
+        .navbar-text-visible {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    }
+    @media (max-width: 991px) {
+        .navbar-text-visible {
+            margin-left: 0.5rem;
         }
     }
 </style>

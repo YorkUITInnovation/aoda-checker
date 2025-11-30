@@ -139,45 +139,48 @@
                             </form>
 
                             <!-- Progress Section -->
-                            <div id="progressSection" class="mt-4" style="display: none;">
+                            <div id="progressSection" class="mt-4" style="display: none;" role="region" aria-label="Scan progress">
                                 <div class="card border-primary">
                                     <div class="card-header bg-primary text-white">
                                         <div class="d-flex align-items-center">
-                                            <div class="spinner-border spinner-border-sm me-2" role="status">
-                                                <span class="visually-hidden">Scanning...</span>
+                                            <div class="spinner-border spinner-border-sm me-2" role="status" aria-live="polite">
+                                                <span class="visually-hidden">Scanning in progress</span>
                                             </div>
                                             <strong>Scan in Progress</strong>
                                         </div>
                                     </div>
                                     <div class="card-body">
+                                        <!-- Live region for screen reader announcements -->
+                                        <div class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" id="scanStatusAnnouncement"></div>
+
                                         <div class="row g-3 mb-3">
                                             <div class="col-6">
                                                 <div class="card bg-light">
                                                     <div class="card-body text-center">
-                                                        <div class="display-4 fw-bold text-primary" id="pagesScanned">0</div>
-                                                        <div class="text-muted">Pages Scanned</div>
+                                                        <div class="display-4 fw-bold text-primary" id="pagesScanned" aria-live="polite">0</div>
+                                                        <div class="text-muted" id="pagesScannedLabel">Pages Scanned</div>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-6">
                                                 <div class="card bg-light">
                                                     <div class="card-body text-center">
-                                                        <div class="display-4 fw-bold text-danger" id="issuesFound">0</div>
-                                                        <div class="text-muted">Issues Found</div>
+                                                        <div class="display-4 fw-bold text-danger" id="issuesFound" aria-live="polite">0</div>
+                                                        <div class="text-muted" id="issuesFoundLabel">Issues Found</div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div id="progressText" class="text-center mb-2">
+                                        <div id="progressText" class="text-center mb-2" aria-live="polite" aria-atomic="true">
                                             <strong>Initializing scan...</strong>
                                         </div>
                                         <div class="text-center mb-2">
                                             <small class="text-muted">
-                                                <i class="bi bi-clock"></i>
-                                                <span id="estimatedTime">Calculating...</span>
+                                                <i class="bi bi-clock" aria-hidden="true"></i>
+                                                <span id="estimatedTime" aria-live="polite">Calculating...</span>
                                             </small>
                                         </div>
-                                        <div class="progress" style="height: 25px;">
+                                        <div class="progress" style="height: 25px;" role="progressbar" aria-label="Scan progress">
                                             <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
                                                  role="progressbar" style="width: 0%">
                                                 <span id="progressPercent">0%</span>

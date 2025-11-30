@@ -4,45 +4,45 @@
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if active_page == 'home' else '' }}" href="/">
-                    <i class="bi bi-search"></i>
+                    <i class="bi bi-search" aria-hidden="true"></i>
                     <span>Scan URLs</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if active_page == 'discover' else '' }}" href="/discover">
-                    <i class="bi bi-search"></i>
+                    <i class="bi bi-compass" aria-hidden="true"></i>
                     <span>Discover URLs</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if active_page == 'history' else '' }}" href="/history">
-                    <i class="bi bi-clock-history"></i>
+                    <i class="bi bi-clock-history" aria-hidden="true"></i>
                     <span>History</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if active_page == 'user-checks' else '' }}" href="/checks">
-                    <i class="bi bi-sliders"></i>
+                    <i class="bi bi-sliders" aria-hidden="true"></i>
                     <span>My Checks</span>
                 </a>
             </li>
 
             {% if current_user.is_admin %}
             <li class="nav-item mt-3">
-                <div class="sidebar-heading">
-                    <i class="bi bi-shield-lock-fill"></i>
+                <div class="sidebar-heading" role="heading" aria-level="2">
+                    <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
                     <span>Admin</span>
                 </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if active_page == 'users' else '' }}" href="/admin/users">
-                    <i class="bi bi-people-fill"></i>
+                    <i class="bi bi-people-fill" aria-hidden="true"></i>
                     <span>Users</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if active_page == 'checks' else '' }}" href="/admin/checks">
-                    <i class="bi bi-gear-fill"></i>
+                    <i class="bi bi-gear-fill" aria-hidden="true"></i>
                     <span>Check Configuration</span>
                 </a>
             </li>
@@ -99,7 +99,7 @@
         padding: 0.5rem 1.5rem;
         font-size: 0.875rem;
         font-weight: 600;
-        color: #6c757d;
+        color: #495057; /* Changed from #6c757d for better contrast (7.0:1 ratio) */
         text-transform: uppercase;
         letter-spacing: 0.05em;
         display: flex;

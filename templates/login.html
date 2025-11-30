@@ -69,22 +69,39 @@
             </div>
 
             {% if error %}
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i>
+            <div class="alert alert-danger" role="alert" id="loginError" aria-live="assertive">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
                 <strong>Error:</strong> {{ error }}
             </div>
             {% endif %}
 
-            <form method="post" action="/login">
+            <form method="post" action="/login" aria-describedby="{% if error %}loginError{% endif %}">
+                <input type="hidden" name="next" value="{{ next if next else '/' }}">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus>
+                    <input type="text"
+                           class="form-control{% if error %} is-invalid{% endif %}"
+                           id="username"
+                           name="username"
+                           required
+                           autofocus
+                           aria-required="true"
+                           {% if error %}aria-invalid="true" aria-describedby="loginError"{% endif %}>
                 </div>
                 <div class="mb-4">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <input type="password"
+                           class="form-control{% if error %} is-invalid{% endif %}"
+                           id="password"
+                           name="password"
+                           required
+                           aria-required="true"
+                           {% if error %}aria-invalid="true" aria-describedby="loginError"{% endif %}>
                 </div>
-                <button type="submit" class="btn btn-primary btn-login">Sign In</button>
+                <button type="submit" class="btn btn-primary btn-login">
+                    <span class="visually-hidden">Submit login form</span>
+                    <span aria-hidden="true">Sign In</span>
+                </button>
             </form>
         </div>
     </div>

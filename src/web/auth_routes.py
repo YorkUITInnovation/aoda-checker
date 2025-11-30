@@ -29,13 +29,16 @@ class TokenResponse(BaseModel):
 
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, current_user: User = Depends(get_current_user)):
+async def login_page(request: Request, next: str = "/", current_user: User = Depends(get_current_user)):
     """Render the login page."""
-    # If already logged in, redirect to home
+    # If already logged in, redirect to the next page or home
     if current_user:
-        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
-    
-    return templates.TemplateResponse("login.html", {"request": request})
+        return RedirectResponse(url=next, status_code=status.HTTP_303_SEE_OTHER)
+
+    return templates.TemplateResponse("login.html", {
+        "request": request,
+        "next": next
+    })
 
 
 @router.post("/login")
@@ -43,6 +46,7 @@ async def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
+    next: str = Form("/"),
     db: AsyncSession = Depends(get_db)
 ):
     """Handle login form submission."""
@@ -53,7 +57,8 @@ async def login(
             "login.html",
             {
                 "request": request,
-                "error": "Invalid username or password"
+                "error": "Invalid username or password",
+                "next": next
             },
             status_code=status.HTTP_401_UNAUTHORIZED
         )
@@ -67,8 +72,9 @@ async def login(
     request.session['username'] = user.username
     request.session['is_admin'] = user.is_admin
     
-    # Redirect to home page
-    return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    # Redirect to the next page or home
+    redirect_url = next if next and next.startswith('/') else "/"
+    return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/api/login", response_model=TokenResponse)
