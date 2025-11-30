@@ -1,48 +1,19 @@
 <!-- Top Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container-fluid">
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" type="button" aria-label="Toggle sidebar navigation">
+            <i class="bi bi-list"></i>
+        </button>
         <a class="navbar-brand" href="/">
             <i class="bi bi-shield-check"></i> AODA Compliance Checker
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'home' else '' }}" href="/">
-                        <i class="bi bi-house-fill"></i> Home
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'discover' else '' }}" href="/discover">
-                        <i class="bi bi-search"></i> Discover URLs
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'history' else '' }}" href="/history">
-                        <i class="bi bi-clock-history"></i> History
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'user-checks' else '' }}" href="/checks">
-                        <i class="bi bi-sliders"></i> My Checks
-                    </a>
-                </li>
-                {% if current_user.is_admin %}
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'users' else '' }}" href="/admin/users">
-                        <i class="bi bi-people-fill"></i> Users
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ 'active' if active_page == 'checks' else '' }}" href="/admin/checks">
-                        <i class="bi bi-gear-fill"></i> Check Configuration
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-            <ul class="navbar-nav">
+            <!-- Right side: User menu and Help -->
+            <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <span class="nav-link">
                         Welcome, <strong>{{ current_user.username }}</strong>
@@ -54,20 +25,61 @@
                 <li class="nav-item">
                     <a class="nav-link {{ 'active' if active_page == 'help' else '' }}" href="/help" title="Help & User Guides">
                         <i class="bi bi-question-circle"></i>
+                        <span class="d-lg-none">Help</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ 'active' if active_page == 'profile' else '' }}" href="/profile">
-                        <i class="bi bi-person-circle"></i> Profile
+                        <i class="bi bi-person-circle"></i>
+                        <span class="d-lg-none">Profile</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/logout">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-lg-none">Logout</span>
                     </a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
-
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay"></div>
+<style>
+    /* Top Navbar Styles */
+    .navbar {
+        background-color: #ffffff !important;
+        border-bottom: 1px solid #dee2e6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1040;
+        height: 56px;
+    }
+    body {
+        padding-top: 56px; /* Height of navbar */
+    }
+    .navbar-brand {
+        font-weight: 600;
+        color: #0d6efd !important;
+    }
+    .navbar-nav .nav-link {
+        padding: 0.5rem 1rem;
+    }
+    .navbar-nav .nav-link.active {
+        color: #0d6efd !important;
+        font-weight: 600;
+    }
+    .navbar-nav .nav-link:hover {
+        color: #0d6efd;
+    }
+    /* Hide text on desktop for icon-only buttons */
+    @media (min-width: 992px) {
+        .navbar-nav .nav-link i {
+            font-size: 1.25rem;
+        }
+    }
+</style>

@@ -19,35 +19,39 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
     {% include 'includes/navbar.html' %}
+    {% include 'includes/sidebar.html' %}
 
     <!-- Main Content -->
-    <div class="container mt-4 mb-5" id="main-content">
-        <div class="row">
-            <div class="col-lg-10 mx-auto">
-                <h1 class="mb-4">
-                    <i class="bi bi-search"></i> Discover URLs
-                </h1>
-                <p class="text-muted mb-4">
-                    Discover all URLs on a website by crawling like the scanner (but without checking accessibility).
-                    Use this to get a complete site map and know exactly how many pages your site has.
-                    Export the results and filter/organize them as needed.
-                </p>
+    <div class="container main-content">
+        <main id="main-content">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold">
+                        <i class="bi bi-compass"></i> Discover URLs
+                    </h1>
+                    <p class="lead">
+                        Discover all URLs on a website by crawling like the scanner (but without checking accessibility).
+                        Use this to get a complete site map and know exactly how many pages your site has.
+                        Export the results and filter/organize them as needed.
+                    </p>
+                </div>
+            </div>
 
-                <!-- Tabs -->
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="discover-tab" data-bs-toggle="tab"
-                           href="#discover-pane" role="tab" aria-controls="discover-pane" aria-selected="true">
-                            <i class="bi bi-compass"></i> Discover URLs
-                        </a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="import-tab" data-bs-toggle="tab"
-                           href="#import-pane" role="tab" aria-controls="import-pane" aria-selected="false">
-                            <i class="bi bi-upload"></i> Import URLs
-                        </a>
-                    </li>
-                </ul>
+            <!-- Tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active" id="discover-tab" data-bs-toggle="tab"
+                       href="#discover-pane" role="tab" aria-controls="discover-pane" aria-selected="true">
+                        <i class="bi bi-compass"></i> Discover URLs
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" id="import-tab" data-bs-toggle="tab"
+                       href="#import-pane" role="tab" aria-controls="import-pane" aria-selected="false">
+                        <i class="bi bi-upload"></i> Import URLs
+                    </a>
+                </li>
+            </ul>
 
                 <!-- Tab Content -->
                 <div class="tab-content">
@@ -231,7 +235,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <!-- Bootstrap 5 JS -->
