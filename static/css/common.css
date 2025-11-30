@@ -1,0 +1,82 @@
+/*
+ * Common Styles - Shared across all AODA Compliance Checker pages
+ * Used by: index.html, discover.html, admin_checks.html, history.html, etc.
+ */
+
+:root {
+    /* WCAG AA Compliant Colors */
+    --bs-warning: #996600;
+    --bs-warning-rgb: 153, 102, 0;
+    --bs-info: #0a7ea4;
+    --bs-info-rgb: 10, 126, 164;
+}
+
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Navbar Styling */
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    color: #0d6efd !important;
+}
+
+/* Accessibility: Skip link */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Improved focus visibility */
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
+    outline: 3px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Card Styling */
+.card {
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 2px solid #0d6efd;
+    font-weight: 600;
+}
+
+/* Main Content Area */
+.main-content {
+    padding: 2rem 0;
+}
+
+/* Feature Items (for index page) */
+.feature-item {
+    padding: 0.5rem 0;
+}
+
+.feature-item::before {
+    content: "\f26b";
+    font-family: "bootstrap-icons";
+    color: #198754;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+

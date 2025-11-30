@@ -1,0 +1,42 @@
+/*
+ * Accessibility Check Configuration Page Styles
+ * Used by: admin_checks.html
+ */
+
+/* Check Rows */
+.check-row {
+    transition: background-color 0.2s;
+}
+
+.check-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* Badges */
+.severity-badge {
+    min-width: 80px;
+}
+
+.wcag-badge {
+    font-size: 0.75rem;
+}
+
+/* Filter Section */
+.filter-section {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Toggle Switch */
+.enabled-switch {
+    width: 3rem;
+    height: 1.5rem;
+}
+
+/* Table Actions */
+.table-actions {
+    white-space: nowrap;
+}
+
