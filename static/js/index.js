@@ -14,6 +14,18 @@ const pagesScanned = document.getElementById('pagesScanned');
 const issuesFound = document.getElementById('issuesFound');
 const estimatedTime = document.getElementById('estimatedTime');
 
+// Check for URL parameter and pre-fill the form
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlParam = urlParams.get('url');
+
+    if (urlParam) {
+        document.getElementById('url').value = urlParam;
+        // Optionally focus the URL field or scroll to form
+        document.getElementById('url').focus();
+    }
+});
+
 // Handle scan form submission
 scanForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -24,8 +36,7 @@ scanForm.addEventListener('submit', async (e) => {
         max_depth: parseInt(document.getElementById('maxDepth').value),
         same_domain_only: true,
         restrict_to_path: document.getElementById('restrictPath').checked,
-        enable_screenshots: document.getElementById('enableScreenshots').checked,
-        scan_mode: document.getElementById('scanMode').value
+        enable_screenshots: document.getElementById('enableScreenshots').checked
     };
 
     // Disable form

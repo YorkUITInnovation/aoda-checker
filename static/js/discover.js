@@ -37,8 +37,27 @@ document.getElementById('discoverForm').addEventListener('submit', async (e) => 
         }
 
         const data = await response.json();
+
+        // Log the response for debugging
+        console.log('Discovery response:', data);
+
+        // Check if we got valid data
+        if (!data) {
+            throw new Error('No data received from server');
+        }
+
         discoveredUrls = data.discovered_urls || [];
         discoveryMetadata = data;
+
+        // Check if discovery had errors
+        if (data.status === 'failed' || data.status === 'error') {
+            throw new Error(data.error_message || 'Discovery failed on server');
+        }
+
+        // Check if we got any URLs
+        if (discoveredUrls.length === 0) {
+            alert('No URLs discovered. The site may have timed out or no links were found matching your criteria.');
+        }
 
         displayResults();
     } catch (error) {
@@ -145,8 +164,18 @@ function parseTXT(txtText) {
 
 // Display Results
 function displayResults() {
-    document.getElementById('resultsSection').style.display = 'block';
-    document.getElementById('urlCount').textContent = discoveredUrls.length;
+    const resultsSection = document.getElementById('resultsSection');
+    const urlCountEl = document.getElementById('urlCount');
+    const metadataEl = document.getElementById('metadata');
+
+    // Safety check - ensure elements exist
+    if (!resultsSection || !urlCountEl || !metadataEl) {
+        console.error('Required DOM elements not found');
+        return;
+    }
+
+    resultsSection.style.display = 'block';
+    urlCountEl.textContent = discoveredUrls.length;
 
     // Show metadata
     let metadataHtml = '';
@@ -159,7 +188,7 @@ function displayResults() {
     if (discoveryMetadata.depth_crawled) {
         metadataHtml += `<strong>Depth:</strong> ${discoveryMetadata.depth_crawled} levels<br>`;
     }
-    document.getElementById('metadata').innerHTML = metadataHtml;
+    metadataEl.innerHTML = metadataHtml;
 
     renderUrlList();
 }
@@ -180,11 +209,21 @@ function renderUrlList(filter = '') {
             <input type="checkbox" class="form-check-input url-checkbox"
                    data-url="${url}" checked>
             <span class="url-text">${url}</span>
+            <button class="btn btn-sm btn-primary scan-url-btn" data-url="${url}" title="Scan this URL">
+                <i class="bi bi-search"></i> Scan
+            </button>
         `;
         urlList.appendChild(div);
     });
 
-    updateSelectedCount();
+    // Add event listeners to all scan buttons
+    document.querySelectorAll('.scan-url-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const url = e.currentTarget.dataset.url;
+            // Navigate to scan page with URL as query parameter
+            window.location.href = `/?url=${encodeURIComponent(url)}`;
+        });
+    });
 }
 
 // Search URLs
@@ -195,21 +234,11 @@ document.getElementById('searchUrls').addEventListener('input', (e) => {
 // Select All/None
 document.getElementById('selectAllBtn').addEventListener('click', () => {
     document.querySelectorAll('.url-checkbox').forEach(cb => cb.checked = true);
-    updateSelectedCount();
 });
 
 document.getElementById('selectNoneBtn').addEventListener('click', () => {
     document.querySelectorAll('.url-checkbox').forEach(cb => cb.checked = false);
-    updateSelectedCount();
 });
-
-// Update selected count when checkboxes change
-document.getElementById('urlList').addEventListener('change', updateSelectedCount);
-
-function updateSelectedCount() {
-    const count = document.querySelectorAll('.url-checkbox:checked').length;
-    document.getElementById('selectedCount').textContent = count;
-}
 
 // Export Functions
 document.getElementById('exportCsvBtn').addEventListener('click', () => {
