@@ -242,8 +242,9 @@
                 <h2 id="summary-heading" class="h4 mb-4">
                     <i class="bi bi-clipboard-data" aria-hidden="true"></i> Summary
                 </h2>
-                <div class="row g-3">
-                    <div class="col-6 col-md-4 col-lg-2">
+                <!-- First Row: Pages Scanned and Total Violations -->
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
                         <div class="card stat-card text-center">
                             <div class="card-body p-3">
                                 <div class="display-5 fw-bold" aria-label="{{ scan_result.pages_scanned }} pages scanned">{{ scan_result.pages_scanned }}</div>
@@ -251,7 +252,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4 col-lg-2">
+                    <div class="col-6">
                         <div class="card stat-card text-center">
                             <div class="card-body p-3">
                                 <div class="display-5 fw-bold" aria-label="{{ scan_result.total_violations }} total violations">{{ scan_result.total_violations }}</div>
@@ -259,7 +260,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                </div>
+                <!-- Second Row: Errors, Warnings, and Alerts -->
+                <div class="row g-3">
+                    <div class="col-4">
                         <div class="card stat-card text-center">
                             <div class="card-body p-3">
                                 <div class="display-5 fw-bold text-danger" aria-label="{{ violations_by_severity.error }} error violations">{{ violations_by_severity.error }}</div>
@@ -267,7 +271,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                    <div class="col-4">
                         <div class="card stat-card text-center">
                             <div class="card-body p-3">
                                 <div class="display-5 fw-bold text-warning" aria-label="{{ violations_by_severity.warning }} warning violations">{{ violations_by_severity.warning }}</div>
@@ -275,7 +279,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4">
+                    <div class="col-4">
                         <div class="card stat-card text-center">
                             <div class="card-body p-3">
                                 <div class="display-5 fw-bold" style="color: #0dcaf0;" aria-label="{{ violations_by_severity.alert }} alert violations">{{ violations_by_severity.alert }}</div>
