@@ -78,7 +78,7 @@ class ScanMode(str, Enum):
 class ScanRequest(BaseModel):
     """Model for a scan request."""
     url: HttpUrl
-    max_pages: int = Field(default=50, ge=1, le=500)
+    max_pages: int = Field(default=50, ge=1, le=10000)
     max_depth: int = Field(default=3, ge=1, le=10)
     same_domain_only: bool = True
     restrict_to_path: bool = True

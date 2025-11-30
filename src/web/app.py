@@ -291,6 +291,60 @@ async def get_scan_results(scan_id: str):
     return result
 
 
+@app.get("/api/scan/{scan_id}/download/docx")
+async def download_docx_report(
+    scan_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Download scan results as a DOCX report."""
+    from fastapi.responses import StreamingResponse
+    from src.utils.docx_report import generate_docx_report
+
+    # Try to get from memory first
+    result = scan_results.get(scan_id)
+
+    # If not in memory, try database
+    if not result:
+        try:
+            repo = ScanRepository(db)
+            db_scan = await repo.get_scan_by_id(scan_id)
+
+            if not db_scan:
+                raise HTTPException(status_code=404, detail="Scan not found")
+
+            # Check permissions
+            if not current_user.is_admin and db_scan.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied")
+
+            result = await repo.convert_to_scan_result(db_scan)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error loading scan for DOCX download: {e}")
+            raise HTTPException(status_code=404, detail="Scan not found")
+
+    # Generate DOCX report
+    try:
+        docx_file = generate_docx_report(result)
+
+        # Create filename
+        from urllib.parse import urlparse
+        domain = urlparse(result.start_url).netloc or 'scan'
+        safe_domain = domain.replace('.', '_').replace(':', '_')
+        timestamp = result.start_time.strftime('%Y%m%d_%H%M%S')
+        filename = f"accessibility_report_{safe_domain}_{timestamp}.docx"
+
+        return StreamingResponse(
+            docx_file,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error generating DOCX report: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate report")
 
 
 @app.get("/results/{scan_id}", response_class=HTMLResponse)

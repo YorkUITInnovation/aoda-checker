@@ -300,7 +300,12 @@ class ScanRepository:
             pages_with_violations=scan.pages_with_violations,
             total_violations=scan.total_violations,
             page_results=page_results,
-            error_message=scan.error_message
+            error_message=scan.error_message,
+            # Include scan configuration
+            max_pages=scan.max_pages,
+            max_depth=scan.max_depth,
+            same_domain_only=bool(scan.same_domain_only),
+            scan_mode=scan.scan_mode
         )
 
         return scan_result
