@@ -140,7 +140,9 @@ async def profile_page(
 async def update_profile(
     request: Request,
     email: str = Form(None),
-    full_name: str = Form(None),
+    first_name: str = Form(None),
+    last_name: str = Form(None),
+    id_number: str = Form(None),
     current_password: str = Form(None),
     new_password: str = Form(None),
     confirm_password: str = Form(None),
@@ -172,14 +174,16 @@ async def update_profile(
             updated_user = await user_repo.update_user(
                 user_id=current_user.id,
                 email=email if email else None,
-                full_name=full_name if full_name else None,
+                first_name=first_name if first_name else None,
+                last_name=last_name if last_name else None,
+                id_number=id_number if id_number else None,
                 password=new_password if new_password else None
             )
 
             if updated_user:
                 success = "Profile updated successfully!"
-                # Update session if username changed
-                request.session['username'] = updated_user.username
+                # Refresh current_user to show updated data
+                current_user = updated_user
             else:
                 error = "Failed to update profile"
         except Exception as e:

@@ -19,7 +19,9 @@ class UserRepository:
         username: str,
         password: str,
         email: Optional[str] = None,
-        full_name: Optional[str] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        id_number: Optional[str] = None,
         is_admin: bool = False,
         auth_method: str = "manual"
     ) -> User:
@@ -30,7 +32,9 @@ class UserRepository:
             username=username,
             email=email,
             hashed_password=hashed_password,
-            full_name=full_name,
+            first_name=first_name,
+            last_name=last_name,
+            id_number=id_number,
             is_admin=is_admin,
             is_active=True,
             auth_method=auth_method,
@@ -76,7 +80,9 @@ class UserRepository:
         user_id: int,
         username: Optional[str] = None,
         email: Optional[str] = None,
-        full_name: Optional[str] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        id_number: Optional[str] = None,
         password: Optional[str] = None,
         is_admin: Optional[bool] = None,
         is_active: Optional[bool] = None
@@ -91,8 +97,12 @@ class UserRepository:
             user.username = username
         if email is not None:
             user.email = email
-        if full_name is not None:
-            user.full_name = full_name
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        if id_number is not None:
+            user.id_number = id_number
         if password is not None:
             user.hashed_password = get_password_hash(password)
         if is_admin is not None:

@@ -84,7 +84,8 @@ async def init_auth():
                     username="admin",
                     password="admin123",  # Default password - MUST BE CHANGED
                     email="admin@example.com",
-                    full_name="System Administrator",
+                    first_name="System",
+                    last_name="Administrator",
                     is_admin=True,
                     auth_method="manual"
                 )

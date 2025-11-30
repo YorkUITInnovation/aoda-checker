@@ -24,9 +24,11 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(255), unique=True, index=True, nullable=False)
+    first_name = Column(String(255), nullable=True)
+    last_name = Column(String(255), nullable=True)
+    id_number = Column(String(100), nullable=True)
     email = Column(String(255), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=False)
-    full_name = Column(String(255), nullable=True)
     is_admin = Column(Boolean, default=False, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
@@ -40,6 +42,13 @@ class User(Base):
 
     # Relationships
     scans = relationship("Scan", back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def full_name(self):
+        """Computed property for backward compatibility."""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.first_name or self.last_name or ""
 
     def __repr__(self):
         return f"<User(username={self.username}, is_admin={self.is_admin})>"
