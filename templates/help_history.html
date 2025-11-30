@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan History - AODA Compliance Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/common.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    {% include 'includes/navbar.html' %}
+    <div class="container main-content">
+        <main id="main-content">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/help">Help</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Scan History</li>
+                </ol>
+            </nav>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold"><i class="bi bi-clock-history"></i> Scan History</h1>
+                </div>
+            </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">On This Page</h2>
+                    <ul><li><a href="#overview">History Overview</a></li><li><a href="#statistics">Your Statistics</a></li><li><a href="#filtering">Filtering Scans</a></li><li><a href="#resume">Resuming Scans</a></li><li><a href="#delete">Managing History</a></li></ul>
+                </div>
+            </div>
+            
+            <section id="overview" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">History Overview</h2>
+                <div class="card"><div class="card-body"><p>View all your past scans, track improvements over time, and resume interrupted scans.</p></div></div>
+            </section>
+            <section id="statistics" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Your Statistics</h2>
+                <div class="card"><div class="card-body"><p>See your personal scan statistics: total scans, completed scans, and total violations found.</p></div></div>
+            </section>
+            <section id="filtering" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Filtering Scans</h2>
+                <div class="card"><div class="card-body"><p>Search scans by URL or use filters to find specific scans quickly.</p></div></div>
+            </section>
+            <section id="resume" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Resuming Scans</h2>
+                <div class="card"><div class="card-body"><p>If a scan was interrupted, click the Resume button to continue from the last checkpoint.</p></div></div>
+            </section>
+            <section id="delete" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Managing History</h2>
+                <div class="card"><div class="card-body"><p>Delete old scans you no longer need to keep your history organized.</p></div></div>
+            </section>
+            <div class="card bg-light mt-5">
+                <div class="card-body">
+                    <h2 class="h5">Next Steps</h2>
+                    <ul class="mb-0">
+                        <li><a href="/help">Back to help home</a></li>
+                        <li><a href="/">Go to home page</a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

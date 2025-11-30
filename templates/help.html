@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - AODA Compliance Checker</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="/static/css/common.css">
+</head>
+<body>
+    <!-- Skip to main content link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    {% include 'includes/navbar.html' %}
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <main id="main-content">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-4 fw-bold">
+                        <i class="bi bi-book"></i> User Guide
+                    </h1>
+                    <p class="lead">Complete documentation for the AODA Compliance Checker</p>
+                </div>
+            </div>
+
+            <!-- Welcome Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-3"><i class="bi bi-info-circle-fill text-primary"></i> Welcome</h2>
+                    <p>Welcome to the AODA Compliance Checker user guide. This tool helps you scan websites for accessibility violations according to WCAG 2.0/2.1 Level AA standards and Ontario's AODA (Accessibility for Ontarians with Disabilities Act) requirements.</p>
+                    <p class="mb-0">Select a topic below to learn more about each feature.</p>
+                </div>
+            </div>
+
+            <!-- Guide Topics -->
+            <div class="row g-4">
+                <!-- Accessibility Scans -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-lift">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle p-3 me-3">
+                                    <i class="bi bi-search fs-4"></i>
+                                </div>
+                                <h3 class="h5 mb-0">Accessibility Scans</h3>
+                            </div>
+                            <p class="card-text">Learn how to run comprehensive accessibility scans on websites to identify WCAG and AODA violations.</p>
+                            <a href="/help/scans" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-right"></i> View Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discover URLs -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-lift">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-success text-white rounded-circle p-3 me-3">
+                                    <i class="bi bi-compass fs-4"></i>
+                                </div>
+                                <h3 class="h5 mb-0">Discover URLs</h3>
+                            </div>
+                            <p class="card-text">Explore how to discover and map all URLs on a website without performing a full accessibility scan.</p>
+                            <a href="/help/discover" class="btn btn-outline-success">
+                                <i class="bi bi-arrow-right"></i> View Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scan Results -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-lift">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-info text-white rounded-circle p-3 me-3">
+                                    <i class="bi bi-file-earmark-text fs-4"></i>
+                                </div>
+                                <h3 class="h5 mb-0">Understanding Results</h3>
+                            </div>
+                            <p class="card-text">Understand how to read scan results, view violations, and export reports in different formats.</p>
+                            <a href="/help/results" class="btn btn-outline-info">
+                                <i class="bi bi-arrow-right"></i> View Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scan History -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-lift">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-warning text-dark rounded-circle p-3 me-3">
+                                    <i class="bi bi-clock-history fs-4"></i>
+                                </div>
+                                <h3 class="h5 mb-0">Scan History</h3>
+                            </div>
+                            <p class="card-text">Learn how to view, filter, and manage your past scans and track your accessibility improvements.</p>
+                            <a href="/help/history" class="btn btn-outline-warning">
+                                <i class="bi bi-arrow-right"></i> View Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Checks Configuration -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-lift">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-secondary text-white rounded-circle p-3 me-3">
+                                    <i class="bi bi-sliders fs-4"></i>
+                                </div>
+                                <h3 class="h5 mb-0">My Checks Configuration</h3>
+                            </div>
+                            <p class="card-text">Customize which accessibility checks are enabled and set severity levels for your personal scans.</p>
+                            <a href="/help/checks" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-right"></i> View Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile (if needed) -->
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm hover-lift">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-danger text-white rounded-circle p-3 me-3">
+                                    <i class="bi bi-question-circle fs-4"></i>
+                                </div>
+                                <h3 class="h5 mb-0">FAQ & Troubleshooting</h3>
+                            </div>
+                            <p class="card-text">Find answers to common questions and solutions to typical issues you might encounter.</p>
+                            <a href="/help/faq" class="btn btn-outline-danger">
+                                <i class="bi bi-arrow-right"></i> View Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card shadow-sm mt-5">
+                <div class="card-body">
+                    <h2 class="h5 mb-3"><i class="bi bi-link-45deg"></i> Quick Links</h2>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h3 class="h6 fw-bold">Getting Started</h3>
+                            <ul class="list-unstyled">
+                                <li><a href="/help/scans#quick-start">Quick Start Guide</a></li>
+                                <li><a href="/help/scans#first-scan">Your First Scan</a></li>
+                                <li><a href="/help/results#understanding">Understanding Violations</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="h6 fw-bold">Advanced Features</h3>
+                            <ul class="list-unstyled">
+                                <li><a href="/help/checks#customization">Customize Check Settings</a></li>
+                                <li><a href="/help/discover#advanced">Advanced URL Discovery</a></li>
+                                <li><a href="/help/results#export">Export Reports</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="h6 fw-bold">Support</h3>
+                            <ul class="list-unstyled">
+                                <li><a href="/help/faq">Frequently Asked Questions</a></li>
+                                <li><a href="/help/faq#troubleshooting">Troubleshooting Guide</a></li>
+                                <li><a href="/help/faq#contact">Contact Support</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WCAG Resources -->
+            <div class="card shadow-sm mt-4 mb-5">
+                <div class="card-body">
+                    <h2 class="h5 mb-3"><i class="bi bi-globe"></i> External Resources</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 class="h6 fw-bold">WCAG Guidelines</h3>
+                            <ul>
+                                <li><a href="https://www.w3.org/WAI/WCAG21/quickref/" target="_blank" rel="noopener">WCAG 2.1 Quick Reference</a></li>
+                                <li><a href="https://www.w3.org/WAI/WCAG21/Understanding/" target="_blank" rel="noopener">Understanding WCAG 2.1</a></li>
+                                <li><a href="https://www.w3.org/WAI/test-evaluate/" target="_blank" rel="noopener">Evaluating Web Accessibility</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class="h6 fw-bold">AODA Resources</h3>
+                            <ul>
+                                <li><a href="https://www.ontario.ca/laws/regulation/110191" target="_blank" rel="noopener">AODA IASR Regulation</a></li>
+                                <li><a href="https://www.ontario.ca/page/how-make-websites-accessible" target="_blank" rel="noopener">Making Websites Accessible</a></li>
+                                <li><a href="https://www.accessforward.ca/" target="_blank" rel="noopener">AccessForward Resources</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .hover-lift {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+        }
+    </style>
+</body>
+</html>
+

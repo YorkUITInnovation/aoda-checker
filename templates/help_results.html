@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Scan Results - AODA Compliance Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/common.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    {% include 'includes/navbar.html' %}
+    <div class="container main-content">
+        <main id="main-content">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/help">Help</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Understanding Scan Results</li>
+                </ol>
+            </nav>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold"><i class="bi bi-file-earmark-text"></i> Understanding Scan Results</h1>
+                </div>
+            </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">On This Page</h2>
+                    <ul><li><a href="#overview">Results Overview</a></li><li><a href="#violations">Understanding Violations</a></li><li><a href="#severity">Severity Levels</a></li><li><a href="#export">Exporting Results</a></li><li><a href="#print">Printing Reports</a></li></ul>
+                </div>
+            </div>
+            
+            <section id="overview" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Results Overview</h2>
+                <div class="card"><div class="card-body"><p>Learn how to interpret your scan results and understand what each section means.</p></div></div>
+            </section>
+            <section id="violations" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Understanding Violations</h2>
+                <div class="card"><div class="card-body"><p>Each violation includes: Error/Warning/Alert severity, WCAG criterion, description, affected element, and remediation guidance.</p></div></div>
+            </section>
+            <section id="severity" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Severity Levels</h2>
+                <div class="card"><div class="card-body"><p><strong>Error:</strong> Critical issues that must be fixed<br><strong>Warning:</strong> Important issues to address<br><strong>Alert:</strong> Minor issues or best practice recommendations</p></div></div>
+            </section>
+            <section id="export" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Exporting Results</h2>
+                <div class="card"><div class="card-body"><p>Download results as Word (DOCX) or Excel (XLSX) format. Share with your team for remediation tracking.</p></div></div>
+            </section>
+            <section id="print" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Printing Reports</h2>
+                <div class="card"><div class="card-body"><p>Use the Print Results button to create printer-friendly reports for documentation.</p></div></div>
+            </section>
+            <div class="card bg-light mt-5">
+                <div class="card-body">
+                    <h2 class="h5">Next Steps</h2>
+                    <ul class="mb-0">
+                        <li><a href="/help">Back to help home</a></li>
+                        <li><a href="/">Go to home page</a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

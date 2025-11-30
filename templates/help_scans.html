@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Scans Guide - AODA Compliance Checker</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="/static/css/common.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    {% include 'includes/navbar.html' %}
+
+    <div class="container main-content">
+        <main id="main-content">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/help">Help</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Accessibility Scans</li>
+                </ol>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold">
+                        <i class="bi bi-search"></i> Accessibility Scans
+                    </h1>
+                    <p class="lead">Learn how to run comprehensive accessibility scans on your websites</p>
+                </div>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">On This Page</h2>
+                    <ul>
+                        <li><a href="#quick-start">Quick Start</a></li>
+                        <li><a href="#first-scan">Running Your First Scan</a></li>
+                        <li><a href="#configuration">Scan Configuration Options</a></li>
+                        <li><a href="#scan-modes">Understanding Scan Modes</a></li>
+                        <li><a href="#progress">Monitoring Scan Progress</a></li>
+                        <li><a href="#tips">Best Practices & Tips</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quick Start -->
+            <section id="quick-start" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Quick Start</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <p><strong>In 3 simple steps:</strong></p>
+                        <ol>
+                            <li>Enter the website URL you want to scan</li>
+                            <li>Click "Start Accessibility Scan"</li>
+                            <li>Wait for the scan to complete and view results</li>
+                        </ol>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> <strong>Tip:</strong> Most websites can be scanned with the default settings. Advanced options are available if you need more control.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- First Scan -->
+            <section id="first-scan" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Running Your First Scan</h2>
+
+                <h3 class="h5 mt-4">Step 1: Enter Website URL</h3>
+                <p>On the home page, enter the full URL of the website you want to scan in the "Website URL" field.</p>
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <strong>Example:</strong> <code>https://example.com</code>
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong> Include the protocol (http:// or https://) in the URL.
+                </div>
+
+                <h3 class="h5 mt-4">Step 2: Choose Scan Settings (Optional)</h3>
+                <p>You can customize these settings or use the defaults:</p>
+                <ul>
+                    <li><strong>Max Pages to Scan:</strong> How many pages to scan (default: 25, max: 10,000)</li>
+                    <li><strong>Max Depth:</strong> How deep to crawl from the starting URL (default: 3)</li>
+                    <li><strong>Scan Mode:</strong> AODA (WCAG 2.0 AA) or WCAG 2.1 (WCAG 2.1 AA)</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Step 3: Start the Scan</h3>
+                <p>Click the "Start Accessibility Scan" button. The scan will begin immediately.</p>
+
+                <h3 class="h5 mt-4">Step 4: Monitor Progress</h3>
+                <p>You'll see a real-time progress indicator showing:</p>
+                <ul>
+                    <li>Number of pages scanned</li>
+                    <li>Violations found</li>
+                    <li>Estimated time remaining</li>
+                    <li>Progress percentage</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Step 5: View Results</h3>
+                <p>When the scan completes, you'll be automatically redirected to the results page where you can:</p>
+                <ul>
+                    <li>View all violations found</li>
+                    <li>See violations organized by page</li>
+                    <li>Export results as Word or Excel</li>
+                    <li>Print the report</li>
+                </ul>
+            </section>
+
+            <!-- Configuration Options -->
+            <section id="configuration" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Scan Configuration Options</h2>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <strong>Max Pages to Scan</strong>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>What it does:</strong> Limits the number of pages scanned</p>
+                                <p><strong>Default:</strong> 25 pages</p>
+                                <p><strong>Range:</strong> 1 to 10,000 pages</p>
+                                <p class="mb-0"><strong>Use case:</strong> Increase for larger sites, decrease for quick tests</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <strong>Max Depth</strong>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>What it does:</strong> Controls how deep the crawler goes from the starting URL</p>
+                                <p><strong>Default:</strong> 3 levels deep</p>
+                                <p><strong>Range:</strong> 1 to 10 levels</p>
+                                <p class="mb-0"><strong>Example:</strong> Depth 1 only scans pages linked directly from the homepage</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-lightbulb"></i> <strong>Pro Tip:</strong> For comprehensive audits, use Max Pages: 500+ and Max Depth: 5+. For quick spot checks, use Max Pages: 10-25 and Max Depth: 2-3.
+                </div>
+            </section>
+
+            <!-- Scan Modes -->
+            <section id="scan-modes" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Understanding Scan Modes</h2>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h3 class="h5 mb-0"><i class="bi bi-check-circle"></i> AODA Mode (Recommended)</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Based on:</strong> WCAG 2.0 Level AA</p>
+                        <p><strong>Best for:</strong> Ontario organizations, Canadian government websites</p>
+                        <p><strong>Requirements:</strong> Meets AODA IASR (Integrated Accessibility Standards Regulation)</p>
+                        <ul class="mb-0">
+                            <li>Checks WCAG 2.0 Level A and AA criteria</li>
+                            <li>Focused on AODA-required checks</li>
+                            <li>Most commonly used standard in Ontario</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h3 class="h5 mb-0"><i class="bi bi-stars"></i> WCAG 2.1 Mode</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Based on:</strong> WCAG 2.1 Level AA</p>
+                        <p><strong>Best for:</strong> Modern web applications, international compliance</p>
+                        <p><strong>Requirements:</strong> Includes all WCAG 2.0 criteria plus newer 2.1 criteria</p>
+                        <ul class="mb-0">
+                            <li>Includes mobile accessibility criteria</li>
+                            <li>Covers cognitive and low vision improvements</li>
+                            <li>More comprehensive than AODA mode</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Monitoring -->
+            <section id="progress" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Monitoring Scan Progress</h2>
+
+                <h3 class="h5">Real-Time Updates</h3>
+                <p>While a scan is running, you'll see:</p>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <ul>
+                            <li><strong>Pages Scanned:</strong> Number of pages analyzed so far</li>
+                            <li><strong>Issues Found:</strong> Total violations detected</li>
+                            <li><strong>Progress Bar:</strong> Visual indication of completion percentage</li>
+                            <li><strong>Est. Time Remaining:</strong> Approximate time until completion</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="h5 mt-4">Scan Checkpointing</h3>
+                <p>Scans automatically save progress every 50 pages. If a scan is interrupted:</p>
+                <ul>
+                    <li>Progress is saved to the database</li>
+                    <li>You can resume from the last checkpoint</li>
+                    <li>Go to History page and click "Resume" on the interrupted scan</li>
+                </ul>
+
+                <div class="alert alert-success">
+                    <i class="bi bi-shield-check"></i> <strong>Protection:</strong> Browser refresh or network issues won't lose your scan progress.
+                </div>
+            </section>
+
+            <!-- Best Practices -->
+            <section id="tips" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Best Practices & Tips</h2>
+
+                <div class="accordion" id="tipsAccordion">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tip1">
+                                <i class="bi bi-lightbulb me-2"></i> Start Small, Scale Up
+                            </button>
+                        </h3>
+                        <div id="tip1" class="accordion-collapse collapse show" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                For your first scan, use a small page limit (10-25) to get familiar with the results. Once comfortable, increase to scan the entire site.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tip2">
+                                <i class="bi bi-lightning me-2"></i> Scan During Off-Peak Hours
+                            </button>
+                        </h3>
+                        <div id="tip2" class="accordion-collapse collapse" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                For large scans (500+ pages), run them during off-peak hours to minimize impact on your web server and get faster results.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tip3">
+                                <i class="bi bi-repeat me-2"></i> Regular Scanning Schedule
+                            </button>
+                        </h3>
+                        <div id="tip3" class="accordion-collapse collapse" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                Scan your website regularly (weekly or monthly) to catch accessibility issues early. Use the History page to track improvements over time.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tip4">
+                                <i class="bi bi-sliders me-2"></i> Customize Your Checks
+                            </button>
+                        </h3>
+                        <div id="tip4" class="accordion-collapse collapse" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                Use the "My Checks" feature to enable/disable specific accessibility checks based on your needs. Focus on what matters most for your site.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tip5">
+                                <i class="bi bi-download me-2"></i> Export and Share Results
+                            </button>
+                        </h3>
+                        <div id="tip5" class="accordion-collapse collapse" data-bs-parent="#tipsAccordion">
+                            <div class="accordion-body">
+                                After each scan, export results to Word or Excel format. Share with your development team for remediation tracking.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Common Issues -->
+            <section class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Common Issues</h2>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="h6"><strong>Q: The scan is taking a long time</strong></h3>
+                        <p>A: Large websites naturally take longer. Check the estimated time remaining. You can also reduce Max Pages or Max Depth for faster scans.</p>
+
+                        <h3 class="h6 mt-3"><strong>Q: Some pages aren't being scanned</strong></h3>
+                        <p>A: Pages might be behind authentication, use JavaScript-heavy navigation, or be outside the Max Depth. Try increasing Max Depth or manually scanning specific sections.</p>
+
+                        <h3 class="h6 mt-3"><strong>Q: Can I scan password-protected sites?</strong></h3>
+                        <p class="mb-0">A: Currently, the scanner cannot access password-protected pages. Consider scanning public pages or use URL Discovery to map out accessible sections first.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h2 class="h5">Next Steps</h2>
+                    <ul class="mb-0">
+                        <li><a href="/help/results">Learn how to interpret scan results</a></li>
+                        <li><a href="/help/checks">Customize your check configuration</a></li>
+                        <li><a href="/help/history">View and manage your scan history</a></li>
+                        <li><a href="/">Start your first scan now</a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

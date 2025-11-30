@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Checks Configuration - AODA Compliance Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/common.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    {% include 'includes/navbar.html' %}
+    <div class="container main-content">
+        <main id="main-content">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/help">Help</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">My Checks Configuration</li>
+                </ol>
+            </nav>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold"><i class="bi bi-sliders"></i> My Checks Configuration</h1>
+                </div>
+            </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">On This Page</h2>
+                    <ul><li><a href="#overview">Check Configuration</a></li><li><a href="#personal">Personal Settings</a></li><li><a href="#enable">Enabling/Disabling Checks</a></li><li><a href="#severity">Setting Severity</a></li><li><a href="#reset">Resetting to Defaults</a></li></ul>
+                </div>
+            </div>
+            
+            <section id="overview" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Check Configuration</h2>
+                <div class="card"><div class="card-body"><p>Customize which accessibility checks are enabled for your scans and set their severity levels.</p></div></div>
+            </section>
+            <section id="personal" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Personal Settings</h2>
+                <div class="card"><div class="card-body"><p>Your check settings only affect your scans. Other users have their own independent settings.</p></div></div>
+            </section>
+            <section id="enable" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Enabling/Disabling Checks</h2>
+                <div class="card"><div class="card-body"><p>Use the toggle switch to quickly enable or disable any check. Click the edit button for more options.</p></div></div>
+            </section>
+            <section id="severity" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Setting Severity</h2>
+                <div class="card"><div class="card-body"><p>Change how violations are categorized: Error (high priority), Warning (medium), or Alert (low priority).</p></div></div>
+            </section>
+            <section id="reset" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Resetting to Defaults</h2>
+                <div class="card"><div class="card-body"><p>Reset individual checks or all checks back to system defaults at any time.</p></div></div>
+            </section>
+            <div class="card bg-light mt-5">
+                <div class="card-body">
+                    <h2 class="h5">Next Steps</h2>
+                    <ul class="mb-0">
+                        <li><a href="/help">Back to help home</a></li>
+                        <li><a href="/">Go to home page</a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

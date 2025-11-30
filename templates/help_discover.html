@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover URLs Guide - AODA Compliance Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/common.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    {% include 'includes/navbar.html' %}
+    <div class="container main-content">
+        <main id="main-content">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/help">Help</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Discover URLs</li>
+                </ol>
+            </nav>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold"><i class="bi bi-compass"></i> Discover URLs</h1>
+                    <p class="lead">Map and export all URLs on a website without performing a full accessibility scan</p>
+                </div>
+            </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">On This Page</h2>
+                    <ul>
+                        <li><a href="#overview">What is URL Discovery?</a></li>
+                        <li><a href="#when-to-use">When to Use URL Discovery</a></li>
+                        <li><a href="#how-to">How to Use URL Discovery</a></li>
+                        <li><a href="#advanced">Advanced Options</a></li>
+                        <li><a href="#export">Exporting Results</a></li>
+                    </ul>
+                </div>
+            </div>
+            <section id="overview" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">What is URL Discovery?</h2>
+                <p>URL Discovery allows you to quickly map out all the pages on a website without running time-consuming accessibility checks. This is useful for:</p>
+                <ul>
+                    <li>Understanding website structure before scanning</li>
+                    <li>Planning targeted accessibility scans</li>
+                    <li>Creating site maps for documentation</li>
+                    <li>Identifying the scope of a website</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Key Difference:</strong> URL Discovery finds and lists pages but doesn't check them for accessibility issues. It's much faster than a full scan.
+                </div>
+            </section>
+            <section id="when-to-use" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">When to Use URL Discovery</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100 border-success">
+                            <div class="card-header bg-success text-white"><strong>Good Use Cases</strong></div>
+                            <div class="card-body">
+                                <ul class="mb-0">
+                                    <li>Planning multi-section scans</li>
+                                    <li>Discovering site structure</li>
+                                    <li>Finding all pages in a subdirectory</li>
+                                    <li>Creating URL lists for manual review</li>
+                                    <li>Estimating scan time/scope</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100 border-warning">
+                            <div class="card-header bg-warning text-dark"><strong>When to Scan Instead</strong></div>
+                            <div class="card-body">
+                                <ul class="mb-0">
+                                    <li>You need accessibility violation reports</li>
+                                    <li>You want WCAG compliance checking</li>
+                                    <li>You need detailed issue descriptions</li>
+                                    <li>You're doing formal accessibility audits</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="how-to" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">How to Use URL Discovery</h2>
+                <h3 class="h5 mt-4">Step 1: Navigate to Discover Page</h3>
+                <p>Click "Discover" in the navigation menu or go to <code>/discover</code></p>
+                <h3 class="h5 mt-4">Step 2: Enter Website URL</h3>
+                <p>Enter the URL you want to explore. Include the full protocol (https://).</p>
+                <div class="card bg-light mb-3">
+                    <div class="card-body"><strong>Example:</strong> <code>https://example.com/section</code></div>
+                </div>
+                <h3 class="h5 mt-4">Step 3: Set Depth Level</h3>
+                <p>Choose how deep to crawl:</p>
+                <ul>
+                    <li><strong>All Pages:</strong> Discover all reachable pages (comprehensive)</li>
+                    <li><strong>1 Level Deep:</strong> Only pages linked directly from start URL</li>
+                    <li><strong>2+ Levels:</strong> Follow links up to specified depth</li>
+                </ul>
+                <h3 class="h5 mt-4">Step 4: Start Discovery</h3>
+                <p>Click "Start Discovery". The system will:</p>
+                <ol>
+                    <li>Crawl the website following links</li>
+                    <li>List all discovered URLs</li>
+                    <li>Show total count and duration</li>
+                    <li>Allow you to export the list</li>
+                </ol>
+            </section>
+            <section id="advanced" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Advanced Options</h2>
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white"><strong>Same Domain Only</strong></div>
+                    <div class="card-body">
+                        <p><strong>When enabled:</strong> Only discovers URLs on the same domain as the starting URL</p>
+                        <p><strong>Example:</strong> Starting at <code>example.com</code> won't follow links to <code>external-site.com</code></p>
+                        <p class="mb-0"><strong>Recommendation:</strong> Keep this enabled to focus on your website</p>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white"><strong>Restrict to Path</strong></div>
+                    <div class="card-body">
+                        <p><strong>When enabled:</strong> Only discovers URLs within the starting path</p>
+                        <p><strong>Example:</strong> Starting at <code>example.com/blog</code> won't discover <code>example.com/products</code></p>
+                        <p class="mb-0"><strong>Use case:</strong> Focus on specific website sections</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header bg-primary text-white"><strong>Max Pages</strong></div>
+                    <div class="card-body">
+                        <p><strong>What it does:</strong> Limits the number of URLs discovered</p>
+                        <p><strong>Default:</strong> 100 pages</p>
+                        <p class="mb-0"><strong>Max:</strong> 10,000 pages (for very large sites)</p>
+                    </div>
+                </div>
+            </section>
+            <section id="export" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Exporting Results</h2>
+                <h3 class="h5">Download as CSV</h3>
+                <p>After discovery completes:</p>
+                <ol>
+                    <li>Review the list of discovered URLs</li>
+                    <li>Click "Download CSV" button</li>
+                    <li>Open in Excel, Google Sheets, or any spreadsheet program</li>
+                    <li>Use for planning, documentation, or analysis</li>
+                </ol>
+                <div class="alert alert-success">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> <strong>CSV Format:</strong> One URL per row, easy to import into other tools or share with your team.
+                </div>
+                <h3 class="h5 mt-4">What You Can Do With Exported URLs</h3>
+                <ul>
+                    <li>Plan targeted scans for specific sections</li>
+                    <li>Share with developers for review</li>
+                    <li>Create documentation of site structure</li>
+                    <li>Identify pages that need priority scanning</li>
+                    <li>Compare against expected site structure</li>
+                </ul>
+            </section>
+            <section class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Tips & Best Practices</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <ul>
+                            <li><strong>Start Broad, Then Narrow:</strong> First discover all pages, then do targeted scans on priority sections</li>
+                            <li><strong>Check Large Sites in Sections:</strong> For 1000+ page sites, use path restriction to discover one section at a time</li>
+                            <li><strong>Document Your Site:</strong> Regular URL discovery helps track when new pages are added</li>
+                            <li><strong>Combine with Scans:</strong> Use discovery to find pages, then run detailed scans on important ones</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h2 class="h5">Next Steps</h2>
+                    <ul class="mb-0">
+                        <li><a href="/discover">Start discovering URLs now</a></li>
+                        <li><a href="/help/scans">Learn about running accessibility scans</a></li>
+                        <li><a href="/help">Back to help home</a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -551,6 +551,76 @@ async def user_checks_page(request: Request, current_user: User = Depends(get_cu
     })
 
 
+@app.get("/help", response_class=HTMLResponse)
+async def help_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the main help/documentation page."""
+    return templates.TemplateResponse("help.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "help"
+    })
+
+
+@app.get("/help/scans", response_class=HTMLResponse)
+async def help_scans_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the accessibility scans help page."""
+    return templates.TemplateResponse("help_scans.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "help"
+    })
+
+
+@app.get("/help/discover", response_class=HTMLResponse)
+async def help_discover_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the discover URLs help page."""
+    return templates.TemplateResponse("help_discover.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "help"
+    })
+
+
+@app.get("/help/results", response_class=HTMLResponse)
+async def help_results_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the results help page."""
+    return templates.TemplateResponse("help_results.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "help"
+    })
+
+
+@app.get("/help/history", response_class=HTMLResponse)
+async def help_history_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the history help page."""
+    return templates.TemplateResponse("help_history.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "help"
+    })
+
+
+@app.get("/help/checks", response_class=HTMLResponse)
+async def help_checks_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the check configuration help page."""
+    return templates.TemplateResponse("help_checks.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "help"
+    })
+
+
+@app.get("/help/faq", response_class=HTMLResponse)
+async def help_faq_page(request: Request, current_user: User = Depends(get_current_active_user)):
+    """Render the FAQ help page."""
+    return templates.TemplateResponse("help_faq.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "help"
+    })
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
