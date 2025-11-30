@@ -35,7 +35,7 @@
                         <li><a href="#when-to-use">When to Use URL Discovery</a></li>
                         <li><a href="#how-to">How to Use URL Discovery</a></li>
                         <li><a href="#advanced">Advanced Options</a></li>
-                        <li><a href="#export">Exporting Results</a></li>
+                        <li><a href="#export">Working with Discovered URLs</a></li>
                     </ul>
                 </div>
             </div>
@@ -101,13 +101,25 @@
                     <li><strong>2+ Levels:</strong> Follow links up to specified depth</li>
                 </ul>
                 <h3 class="h5 mt-4">Step 4: Start Discovery</h3>
-                <p>Click "Start Discovery". The system will:</p>
+                <p>Click "Discover URLs". The system will:</p>
                 <ol>
                     <li>Crawl the website following links</li>
                     <li>List all discovered URLs</li>
                     <li>Show total count and duration</li>
-                    <li>Allow you to export the list</li>
+                    <li>Display each URL with a "Scan" button</li>
                 </ol>
+
+                <h3 class="h5 mt-4">Step 5: Scan Individual URLs (Optional)</h3>
+                <p>After discovery completes, each URL in the results list has a "Scan" button:</p>
+                <ul>
+                    <li>Click the <strong>"Scan"</strong> button next to any URL</li>
+                    <li>You'll be taken to the scan page with that URL pre-filled</li>
+                    <li>Adjust scan settings if needed, then start the accessibility scan</li>
+                    <li>This allows you to quickly scan specific pages you discovered</li>
+                </ul>
+                <div class="alert alert-success">
+                    <i class="bi bi-lightning"></i> <strong>Quick Workflow:</strong> Discover all pages → Click "Scan" on priority URLs → Get focused accessibility reports
+                </div>
             </section>
             <section id="advanced" class="mb-5">
                 <h2 class="h3 border-bottom pb-2 mb-3">Advanced Options</h2>
@@ -137,20 +149,36 @@
                 </div>
             </section>
             <section id="export" class="mb-5">
-                <h2 class="h3 border-bottom pb-2 mb-3">Exporting Results</h2>
-                <h3 class="h5">Download as CSV</h3>
-                <p>After discovery completes:</p>
+                <h2 class="h3 border-bottom pb-2 mb-3">Working with Discovered URLs</h2>
+
+                <h3 class="h5">Scan Individual URLs</h3>
+                <p>Each discovered URL has a "Scan" button for quick accessibility scanning:</p>
                 <ol>
                     <li>Review the list of discovered URLs</li>
-                    <li>Click "Download CSV" button</li>
-                    <li>Open in Excel, Google Sheets, or any spreadsheet program</li>
-                    <li>Use for planning, documentation, or analysis</li>
+                    <li>Click the <strong>"Scan"</strong> button next to any URL you want to check</li>
+                    <li>The scan page opens with the URL pre-filled</li>
+                    <li>Configure scan settings (or use defaults) and start scanning</li>
                 </ol>
-                <div class="alert alert-success">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> <strong>CSV Format:</strong> One URL per row, easy to import into other tools or share with your team.
+                <div class="alert alert-info">
+                    <i class="bi bi-search"></i> <strong>One-Click Scanning:</strong> No need to copy/paste URLs - click "Scan" and you're ready to go!
                 </div>
-                <h3 class="h5 mt-4">What You Can Do With Exported URLs</h3>
+
+                <h3 class="h5 mt-4">Export URLs for Planning</h3>
+                <p>Download discovered URLs for analysis and documentation:</p>
                 <ul>
+                    <li><strong>CSV:</strong> Open in Excel, Google Sheets for organization and analysis</li>
+                    <li><strong>JSON:</strong> Import into other tools or scripts</li>
+                    <li><strong>TXT:</strong> Simple list format, one URL per line</li>
+                    <li><strong>Copy:</strong> Copy selected URLs to clipboard for quick sharing</li>
+                </ul>
+
+                <div class="alert alert-success">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> <strong>Multiple Formats:</strong> Choose the format that works best for your workflow and tools.
+                </div>
+
+                <h3 class="h5 mt-4">What You Can Do With Discovered URLs</h3>
+                <ul>
+                    <li><strong>Scan selectively:</strong> Use the "Scan" button to check high-priority pages</li>
                     <li>Plan targeted scans for specific sections</li>
                     <li>Share with developers for review</li>
                     <li>Create documentation of site structure</li>
@@ -163,10 +191,12 @@
                 <div class="card">
                     <div class="card-body">
                         <ul>
-                            <li><strong>Start Broad, Then Narrow:</strong> First discover all pages, then do targeted scans on priority sections</li>
+                            <li><strong>Use "Scan" Buttons for Quick Checks:</strong> Click the "Scan" button next to any URL to immediately check it for accessibility issues</li>
+                            <li><strong>Start Broad, Then Narrow:</strong> First discover all pages, then use individual "Scan" buttons on priority sections</li>
                             <li><strong>Check Large Sites in Sections:</strong> For 1000+ page sites, use path restriction to discover one section at a time</li>
                             <li><strong>Document Your Site:</strong> Regular URL discovery helps track when new pages are added</li>
-                            <li><strong>Combine with Scans:</strong> Use discovery to find pages, then run detailed scans on important ones</li>
+                            <li><strong>Combine Discovery with Targeted Scans:</strong> Use discovery to find pages, then click "Scan" on important ones for detailed accessibility reports</li>
+                            <li><strong>Export for Planning:</strong> Download URLs to spreadsheet for organizing scan priorities with your team</li>
                         </ul>
                     </div>
                 </div>

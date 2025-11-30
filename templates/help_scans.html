@@ -47,7 +47,6 @@
                         <li><a href="#quick-start">Quick Start</a></li>
                         <li><a href="#first-scan">Running Your First Scan</a></li>
                         <li><a href="#configuration">Scan Configuration Options</a></li>
-                        <li><a href="#scan-modes">Understanding Scan Modes</a></li>
                         <li><a href="#progress">Monitoring Scan Progress</a></li>
                         <li><a href="#tips">Best Practices & Tips</a></li>
                     </ul>
@@ -90,10 +89,14 @@
                 <h3 class="h5 mt-4">Step 2: Choose Scan Settings (Optional)</h3>
                 <p>You can customize these settings or use the defaults:</p>
                 <ul>
-                    <li><strong>Max Pages to Scan:</strong> How many pages to scan (default: 25, max: 10,000)</li>
+                    <li><strong>Max Pages to Scan:</strong> How many pages to scan (default: 50, max: 10,000)</li>
                     <li><strong>Max Depth:</strong> How deep to crawl from the starting URL (default: 3)</li>
-                    <li><strong>Scan Mode:</strong> AODA (WCAG 2.0 AA) or WCAG 2.1 (WCAG 2.1 AA)</li>
+                    <li><strong>Restrict to Path:</strong> Only scan pages within the starting URL path (enabled by default)</li>
+                    <li><strong>Capture Screenshots:</strong> Optional - saves screenshots but significantly increases scan time</li>
                 </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Note:</strong> The accessibility checks performed are based on your personalized "My Checks" configuration. Customize which checks are enabled from the My Checks page.
+                </div>
 
                 <h3 class="h5 mt-4">Step 3: Start the Scan</h3>
                 <p>Click the "Start Accessibility Scan" button. The scan will begin immediately.</p>
@@ -129,7 +132,7 @@
                             </div>
                             <div class="card-body">
                                 <p><strong>What it does:</strong> Limits the number of pages scanned</p>
-                                <p><strong>Default:</strong> 25 pages</p>
+                                <p><strong>Default:</strong> 50 pages</p>
                                 <p><strong>Range:</strong> 1 to 10,000 pages</p>
                                 <p class="mb-0"><strong>Use case:</strong> Increase for larger sites, decrease for quick tests</p>
                             </div>
@@ -149,47 +152,50 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <strong>Restrict to Path</strong>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>What it does:</strong> Limits scanning to pages within the starting URL's path</p>
+                                <p><strong>Default:</strong> Enabled (checked)</p>
+                                <p><strong>Example:</strong> Starting at https://example.com/blog will only scan /blog pages</p>
+                                <p class="mb-0"><strong>Use case:</strong> Focus scans on specific website sections</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <strong>Capture Screenshots</strong>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>What it does:</strong> Saves screenshots of each scanned page</p>
+                                <p><strong>Default:</strong> Disabled (unchecked)</p>
+                                <p><strong>Warning:</strong> Significantly increases scan time</p>
+                                <p class="mb-0"><strong>Use case:</strong> Visual documentation or detailed reports</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="alert alert-info mt-3">
                     <i class="bi bi-lightbulb"></i> <strong>Pro Tip:</strong> For comprehensive audits, use Max Pages: 500+ and Max Depth: 5+. For quick spot checks, use Max Pages: 10-25 and Max Depth: 2-3.
                 </div>
-            </section>
 
-            <!-- Scan Modes -->
-            <section id="scan-modes" class="mb-5">
-                <h2 class="h3 border-bottom pb-2 mb-3">Understanding Scan Modes</h2>
-
-                <div class="card mb-3">
-                    <div class="card-header bg-success text-white">
-                        <h3 class="h5 mb-0"><i class="bi bi-check-circle"></i> AODA Mode (Recommended)</h3>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Based on:</strong> WCAG 2.0 Level AA</p>
-                        <p><strong>Best for:</strong> Ontario organizations, Canadian government websites</p>
-                        <p><strong>Requirements:</strong> Meets AODA IASR (Integrated Accessibility Standards Regulation)</p>
-                        <ul class="mb-0">
-                            <li>Checks WCAG 2.0 Level A and AA criteria</li>
-                            <li>Focused on AODA-required checks</li>
-                            <li>Most commonly used standard in Ontario</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h3 class="h5 mb-0"><i class="bi bi-stars"></i> WCAG 2.1 Mode</h3>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Based on:</strong> WCAG 2.1 Level AA</p>
-                        <p><strong>Best for:</strong> Modern web applications, international compliance</p>
-                        <p><strong>Requirements:</strong> Includes all WCAG 2.0 criteria plus newer 2.1 criteria</p>
-                        <ul class="mb-0">
-                            <li>Includes mobile accessibility criteria</li>
-                            <li>Covers cognitive and low vision improvements</li>
-                            <li>More comprehensive than AODA mode</li>
-                        </ul>
-                    </div>
+                <h3 class="h5 mt-4">Customizing Accessibility Checks</h3>
+                <p>The specific accessibility checks performed during a scan are controlled by your personalized check configuration:</p>
+                <ul>
+                    <li>Go to <strong>"My Checks"</strong> in the navigation menu</li>
+                    <li>Enable or disable individual accessibility checks</li>
+                    <li>Set severity levels (Error, Warning, Alert) for each check</li>
+                    <li>Your settings apply to all your scans automatically</li>
+                </ul>
+                <div class="alert alert-success">
+                    <i class="bi bi-gear"></i> <strong>Personalized Scanning:</strong> Each user can customize which accessibility checks to run, allowing you to focus on what matters most for your website.
                 </div>
             </section>
 
