@@ -130,7 +130,8 @@ async def profile_page(
         "profile.html",
         {
             "request": request,
-            "current_user": current_user
+            "current_user": current_user,
+            "active_page": "profile"
         }
     )
 
@@ -190,7 +191,8 @@ async def update_profile(
             "request": request,
             "current_user": current_user,
             "error": error,
-            "success": success
+            "success": success,
+            "active_page": "profile"
         }
     )
 

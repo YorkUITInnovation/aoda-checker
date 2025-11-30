@@ -80,7 +80,8 @@ async def index(request: Request, current_user: User = Depends(get_current_activ
     """Render the main page."""
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "current_user": current_user
+        "current_user": current_user,
+        "active_page": "home"
     })
 
 
@@ -407,7 +408,8 @@ async def discover_page(
     """Render the URL discovery page."""
     return templates.TemplateResponse("discover.html", {
         "request": request,
-        "current_user": current_user
+        "current_user": current_user,
+        "active_page": "discover"
     })
 
 
@@ -460,7 +462,8 @@ async def history_page(request: Request, current_user: User = Depends(get_curren
     """Render the scan history page."""
     return templates.TemplateResponse("history.html", {
         "request": request,
-        "current_user": current_user
+        "current_user": current_user,
+        "active_page": "history"
     })
 
 

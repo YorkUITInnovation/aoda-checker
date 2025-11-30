@@ -49,7 +49,8 @@ async def admin_users_page(
         {
             "request": request,
             "current_user": current_user,
-            "users": users
+            "users": users,
+            "active_page": "users"
         }
     )
 
@@ -64,7 +65,8 @@ async def admin_checks_page(
         "admin_checks.html",
         {
             "request": request,
-            "current_user": current_user
+            "current_user": current_user,
+            "active_page": "checks"
         }
     )
 
