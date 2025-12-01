@@ -20,7 +20,9 @@ class CreateUserRequest(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    id_number: Optional[str] = None
     is_admin: bool = False
 
 
@@ -28,7 +30,9 @@ class UpdateUserRequest(BaseModel):
     """Update user request model."""
     username: Optional[str] = None
     email: Optional[str] = None
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    id_number: Optional[str] = None
     password: Optional[str] = None
     is_admin: Optional[bool] = None
     is_active: Optional[bool] = None
@@ -85,6 +89,9 @@ async def get_all_users(
             "id": user.id,
             "username": user.username,
             "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "id_number": user.id_number,
             "full_name": user.full_name,
             "is_admin": user.is_admin,
             "is_active": user.is_active,
@@ -102,7 +109,9 @@ async def create_user_form(
     username: str = Form(...),
     password: str = Form(...),
     email: Optional[str] = Form(None),
-    full_name: Optional[str] = Form(None),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
+    id_number: Optional[str] = Form(None),
     is_admin: bool = Form(False),
     current_user: User = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db)
@@ -143,7 +152,9 @@ async def create_user_form(
         username=username,
         password=password,
         email=email if email else None,
-        full_name=full_name if full_name else None,
+        first_name=first_name if first_name else None,
+        last_name=last_name if last_name else None,
+        id_number=id_number if id_number else None,
         is_admin=is_admin
     )
     
@@ -178,7 +189,9 @@ async def create_user_api(
         username=user_request.username,
         password=user_request.password,
         email=user_request.email,
-        full_name=user_request.full_name,
+        first_name=user_request.first_name,
+        last_name=user_request.last_name,
+        id_number=user_request.id_number,
         is_admin=user_request.is_admin
     )
     
@@ -186,6 +199,9 @@ async def create_user_api(
         "id": new_user.id,
         "username": new_user.username,
         "email": new_user.email,
+        "first_name": new_user.first_name,
+        "last_name": new_user.last_name,
+        "id_number": new_user.id_number,
         "full_name": new_user.full_name,
         "is_admin": new_user.is_admin,
         "is_active": new_user.is_active
@@ -198,7 +214,9 @@ async def edit_user_form(
     user_id: int,
     username: str = Form(...),
     email: Optional[str] = Form(None),
-    full_name: Optional[str] = Form(None),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
+    id_number: Optional[str] = Form(None),
     password: Optional[str] = Form(None),
     is_admin: bool = Form(False),
     is_active: bool = Form(True),
@@ -241,7 +259,9 @@ async def edit_user_form(
         user_id=user_id,
         username=username,
         email=email if email else None,
-        full_name=full_name if full_name else None,
+        first_name=first_name if first_name else None,
+        last_name=last_name if last_name else None,
+        id_number=id_number if id_number else None,
         password=password if password else None,
         is_admin=is_admin,
         is_active=is_active
@@ -282,7 +302,9 @@ async def update_user_api(
         user_id=user_id,
         username=user_request.username,
         email=user_request.email,
-        full_name=user_request.full_name,
+        first_name=user_request.first_name,
+        last_name=user_request.last_name,
+        id_number=user_request.id_number,
         password=user_request.password,
         is_admin=user_request.is_admin,
         is_active=user_request.is_active
@@ -295,6 +317,9 @@ async def update_user_api(
         "id": updated_user.id,
         "username": updated_user.username,
         "email": updated_user.email,
+        "first_name": updated_user.first_name,
+        "last_name": updated_user.last_name,
+        "id_number": updated_user.id_number,
         "full_name": updated_user.full_name,
         "is_admin": updated_user.is_admin,
         "is_active": updated_user.is_active
