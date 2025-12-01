@@ -122,17 +122,17 @@
                     <a href="/" class="btn btn-outline-primary" aria-label="Start a new scan">
                         <i class="bi bi-plus-circle" aria-hidden="true"></i> New Scan
                     </a>
-                    <button onclick="window.print()" class="btn btn-secondary" aria-label="Print scan results">
+                    <button onclick="window.print()" class="btn btn-outline-secondary" aria-label="Print scan results">
                         <i class="bi bi-printer" aria-hidden="true"></i> Print Results
                     </button>
                     <a href="/api/scan/{{ scan_result.scan_id }}/download/docx"
-                       class="btn btn-success"
+                       class="btn btn-outline-success"
                        download
                        aria-label="Download report as DOCX file">
                         <i class="bi bi-file-earmark-word" aria-hidden="true"></i> Download Report (DOCX)
                     </a>
                     <a href="/api/scan/{{ scan_result.scan_id }}/download/xlsx"
-                       class="btn btn-primary"
+                       class="btn btn-outline-primary"
                        download
                        aria-label="Download report as Excel file">
                         <i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Download Excel (XLSX)

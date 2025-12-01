@@ -209,7 +209,7 @@ function renderUrlList(filter = '') {
             <input type="checkbox" class="form-check-input url-checkbox"
                    data-url="${url}" checked>
             <span class="url-text">${url}</span>
-            <button class="btn btn-sm btn-primary scan-url-btn" data-url="${url}" title="Scan this URL">
+            <button class="btn btn-sm btn-outline-primary scan-url-btn" data-url="${url}" title="Scan this URL">
                 <i class="bi bi-search"></i> Scan
             </button>
         `;
