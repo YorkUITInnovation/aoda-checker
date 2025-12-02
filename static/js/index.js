@@ -14,6 +14,47 @@ const pagesScanned = document.getElementById('pagesScanned');
 const issuesFound = document.getElementById('issuesFound');
 const estimatedTime = document.getElementById('estimatedTime');
 
+// Check for active batch scans
+async function checkActiveBatchScans() {
+    try {
+        const response = await fetch('/api/batch/active');
+        if (response.ok) {
+            const activeBatches = await response.json();
+            if (activeBatches && activeBatches.length > 0) {
+                // Disable scan form
+                disableScanForm();
+                showBatchWarning();
+            }
+        }
+    } catch (error) {
+        console.error('Error checking active batch scans:', error);
+    }
+}
+
+// Disable scan form during batch scanning
+function disableScanForm() {
+    if (scanButton) {
+        scanButton.disabled = true;
+        scanButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Batch Scan in Progress...';
+    }
+}
+
+// Show batch scanning warning
+function showBatchWarning() {
+    const warningHtml = `
+        <div class="alert alert-warning alert-dismissible fade show" role="alert" id="batchWarning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Batch scan in progress!</strong> 
+            Scanning is temporarily disabled. Please wait for the batch scan to complete.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    const container = document.querySelector('.container.main-content');
+    if (container && !document.getElementById('batchWarning')) {
+        container.insertAdjacentHTML('afterbegin', warningHtml);
+    }
+}
+
 // Check for URL parameter and pre-fill the form
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -24,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Optionally focus the URL field or scroll to form
         document.getElementById('url').focus();
     }
+
+    // Check for active batch scans
+    checkActiveBatchScans();
 });
 
 // Handle scan form submission

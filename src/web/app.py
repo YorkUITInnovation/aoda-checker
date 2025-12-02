@@ -105,6 +105,10 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
 # In-memory storage for active scan results (will also persist to database)
 scan_results: Dict[str, ScanResult] = {}
 
+# Register batch scan routes
+from src.web.batch_scan_routes import router as batch_router
+app.include_router(batch_router)
+
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request, current_user: User = Depends(get_current_active_user)):

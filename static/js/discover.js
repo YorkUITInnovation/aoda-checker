@@ -5,6 +5,54 @@
 
 let discoveredUrls = [];
 let discoveryMetadata = {};
+let selectedUrls = new Set();
+let activeBatchScan = null;
+let batchStatusInterval = null;
+
+// Load saved scan parameters
+function loadSavedParameters() {
+    const savedMaxPages = localStorage.getItem('lastMaxPages');
+    const savedMaxDepth = localStorage.getItem('lastMaxDepth');
+
+    if (savedMaxPages) {
+        const maxPagesInput = document.getElementById('batchMaxPages');
+        if (maxPagesInput) maxPagesInput.value = savedMaxPages;
+    }
+    if (savedMaxDepth) {
+        const maxDepthInput = document.getElementById('batchMaxDepth');
+        if (maxDepthInput) maxDepthInput.value = savedMaxDepth;
+    }
+}
+
+// Save scan parameters
+function saveScanParameters(maxPages, maxDepth) {
+    localStorage.setItem('lastMaxPages', maxPages);
+    localStorage.setItem('lastMaxDepth', maxDepth);
+}
+
+// Check for active batch scans on page load
+async function checkActiveBatchScans() {
+    try {
+        const response = await fetch('/api/batch/active');
+        if (response.ok) {
+            const activeBatches = await response.json();
+            if (activeBatches && activeBatches.length > 0) {
+                activeBatchScan = activeBatches[0].batch_id;
+                startBatchStatusPolling();
+                showBatchProgress();
+                disableScanControls();
+            }
+        }
+    } catch (error) {
+        console.error('Error checking active batch scans:', error);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadSavedParameters();
+    checkActiveBatchScans();
+});
 
 // Discover URLs Form
 document.getElementById('discoverForm').addEventListener('submit', async (e) => {
@@ -285,3 +333,266 @@ function downloadFile(content, filename, mimeType) {
     URL.revokeObjectURL(url);
 }
 
+// ===== BATCH SCANNING FUNCTIONS =====
+
+// Start Batch Scan
+document.getElementById('batchScanBtn')?.addEventListener('click', async () => {
+    const selectedCheckboxes = Array.from(document.querySelectorAll('.url-checkbox:checked'));
+    selectedUrls = new Set(selectedCheckboxes.map(cb => cb.dataset.url));
+
+    if (selectedUrls.size === 0) {
+        alert('Please select at least one URL to scan');
+        return;
+    }
+
+    if (selectedUrls.size > 500) {
+        alert('Maximum 500 URLs can be scanned in a batch');
+        return;
+    }
+
+    const maxPages = parseInt(document.getElementById('batchMaxPages').value);
+    const maxDepth = parseInt(document.getElementById('batchMaxDepth').value);
+
+    if (maxPages < 1 || maxPages > 10000) {
+        alert('Max pages must be between 1 and 10,000');
+        return;
+    }
+
+    if (maxDepth < 1 || maxDepth > 10) {
+        alert('Max depth must be between 1 and 10');
+        return;
+    }
+
+    // Save parameters for next time
+    saveScanParameters(maxPages, maxDepth);
+
+    // Confirm
+    if (!confirm(`Start batch scan of ${selectedUrls.size} URLs?\n\nThis will create ${selectedUrls.size} individual scans.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/batch/scan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                urls: Array.from(selectedUrls),
+                max_pages: maxPages,
+                max_depth: maxDepth,
+                same_domain_only: true,
+                scan_mode: 'aoda'
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to start batch scan');
+        }
+
+        const data = await response.json();
+        activeBatchScan = data.batch_id;
+
+        // Show progress section
+        showBatchProgress();
+
+        // Start polling for status
+        startBatchStatusPolling();
+
+        // Disable scan controls
+        disableScanControls();
+
+    } catch (error) {
+        alert(`Failed to start batch scan: ${error.message}`);
+    }
+});
+
+// Cancel Batch Scan
+document.getElementById('cancelBatchBtn')?.addEventListener('click', async () => {
+    if (!activeBatchScan) return;
+
+    if (!confirm('Are you sure you want to cancel this batch scan?\n\nCompleted scans will be saved, but remaining URLs will not be scanned.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/batch/cancel/${activeBatchScan}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to cancel batch scan');
+        }
+
+        alert('Batch scan cancelled successfully');
+        stopBatchStatusPolling();
+        hideBatchProgress();
+        enableScanControls();
+        activeBatchScan = null;
+
+    } catch (error) {
+        alert(`Failed to cancel batch scan: ${error.message}`);
+    }
+});
+
+// Show batch progress section
+function showBatchProgress() {
+    const progressSection = document.getElementById('batchProgressSection');
+    if (progressSection) {
+        progressSection.style.display = 'block';
+    }
+}
+
+// Hide batch progress section
+function hideBatchProgress() {
+    const progressSection = document.getElementById('batchProgressSection');
+    if (progressSection) {
+        progressSection.style.display = 'none';
+    }
+}
+
+// Disable scan controls during batch scanning
+function disableScanControls() {
+    const batchScanBtn = document.getElementById('batchScanBtn');
+    const discoverBtn = document.querySelector('#discoverForm button[type="submit"]');
+
+    if (batchScanBtn) {
+        batchScanBtn.disabled = true;
+        batchScanBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Batch Scan in Progress...';
+    }
+
+    if (discoverBtn) {
+        discoverBtn.disabled = true;
+    }
+
+    // Disable individual scan buttons
+    document.querySelectorAll('.scan-url-btn').forEach(btn => {
+        btn.disabled = true;
+    });
+
+    // Show warning message
+    const warningEl = document.getElementById('scanningWarning');
+    if (warningEl) {
+        warningEl.style.display = 'block';
+    }
+}
+
+// Enable scan controls after batch completes
+function enableScanControls() {
+    const batchScanBtn = document.getElementById('batchScanBtn');
+    const discoverBtn = document.querySelector('#discoverForm button[type="submit"]');
+
+    if (batchScanBtn) {
+        batchScanBtn.disabled = false;
+        batchScanBtn.innerHTML = '<i class="bi bi-play-circle-fill"></i> Scan All Selected';
+    }
+
+    if (discoverBtn) {
+        discoverBtn.disabled = false;
+    }
+
+    // Enable individual scan buttons
+    document.querySelectorAll('.scan-url-btn').forEach(btn => {
+        btn.disabled = false;
+    });
+
+    // Hide warning message
+    const warningEl = document.getElementById('scanningWarning');
+    if (warningEl) {
+        warningEl.style.display = 'none';
+    }
+}
+
+// Start polling for batch status
+function startBatchStatusPolling() {
+    if (batchStatusInterval) {
+        clearInterval(batchStatusInterval);
+    }
+
+    updateBatchStatus(); // Immediate update
+    batchStatusInterval = setInterval(updateBatchStatus, 2000); // Poll every 2 seconds
+}
+
+// Stop polling for batch status
+function stopBatchStatusPolling() {
+    if (batchStatusInterval) {
+        clearInterval(batchStatusInterval);
+        batchStatusInterval = null;
+    }
+}
+
+// Update batch status display
+async function updateBatchStatus() {
+    if (!activeBatchScan) {
+        stopBatchStatusPolling();
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/batch/status/${activeBatchScan}`);
+
+        if (!response.ok) {
+            console.error('Failed to fetch batch status');
+            return;
+        }
+
+        const status = await response.json();
+
+        // Update progress text
+        const progressText = document.getElementById('batchProgressText');
+        if (progressText) {
+            const completed = status.completed + status.failed;
+            progressText.textContent = `Scanning ${completed} of ${status.total_urls} URLs`;
+        }
+
+        // Update current URL
+        const currentUrlEl = document.getElementById('currentBatchUrl');
+        if (currentUrlEl) {
+            if (status.current_url) {
+                currentUrlEl.textContent = `Current: ${status.current_url}`;
+                currentUrlEl.style.display = 'block';
+            } else {
+                currentUrlEl.style.display = 'none';
+            }
+        }
+
+        // Update progress bar
+        const progressBar = document.getElementById('batchProgressBar');
+        if (progressBar) {
+            const completed = status.completed + status.failed;
+            const percentage = (completed / status.total_urls) * 100;
+            progressBar.style.width = `${percentage}%`;
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressBar.textContent = `${Math.round(percentage)}%`;
+        }
+
+        // Update stats
+        const statsEl = document.getElementById('batchStats');
+        if (statsEl) {
+            statsEl.innerHTML = `
+                <span class="badge bg-success me-2">Completed: ${status.completed}</span>
+                <span class="badge bg-danger me-2">Failed: ${status.failed}</span>
+                <span class="badge bg-primary">In Progress: ${status.in_progress}</span>
+            `;
+        }
+
+        // Check if completed or cancelled
+        if (status.status === 'completed' || status.status === 'cancelled') {
+            stopBatchStatusPolling();
+            enableScanControls();
+
+            setTimeout(() => {
+                hideBatchProgress();
+                activeBatchScan = null;
+
+                if (status.status === 'completed') {
+                    alert(`Batch scan completed!\n\n${status.completed} URLs scanned successfully\n${status.failed} URLs failed\n\nYou can view the results in the History page.`);
+                }
+            }, 3000);
+        }
+
+    } catch (error) {
+        console.error('Error updating batch status:', error);
+    }
+}
