@@ -9,100 +9,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
-    <style>
-        :root {
-            /* WCAG AA Compliant Colors */
-            --bs-warning: #996600;
-            --bs-warning-rgb: 153, 102, 0;
-            --bs-info: #0a7ea4;
-            --bs-info-rgb: 10, 126, 164;
-        }
-
-        body {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-        }
-
-        .navbar {
-            background-color: #ffffff;
-            border-bottom: 1px solid #dee2e6;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-        }
-
-        .navbar-brand {
-            font-weight: 600;
-            color: #0d6efd !important;
-        }
-
-        .main-content {
-            padding: 2rem 0;
-        }
-
-        .card {
-            border: 1px solid #dee2e6;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .card-header {
-            background-color: #ffffff;
-            border-bottom: 2px solid #0d6efd;
-            font-weight: 600;
-        }
-
-        .scan-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .scan-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-
-        .stat-box {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 1.5rem;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #0d6efd;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: #6c757d;
-            text-transform: uppercase;
-            font-weight: 500;
-        }
-
-        /* Accessibility: Skip link */
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: #000;
-            color: #fff;
-            padding: 8px;
-            text-decoration: none;
-            z-index: 100;
-        }
-
-        .skip-link:focus {
-            top: 0;
-        }
-
-        a:focus, button:focus, input:focus, select:focus {
-            outline: 3px solid #0d6efd;
-            outline-offset: 2px;
-        }
-    </style>
+    <!-- History Page Styles -->
+    <link href="/static/css/history.css" rel="stylesheet">
 </head>
-<body>
+<body data-is-admin="{{ 'true' if current_user.is_admin else 'false' }}">
     <!-- Skip link -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
@@ -194,6 +104,32 @@
                 </div>
             </div>
 
+            <!-- Bulk Action Bar (shown when scans are selected) -->
+            <div id="bulkActionBar" class="bulk-action-bar" role="alert" aria-live="polite">
+                <div class="selection-info">
+                    <i class="bi bi-check-square"></i>
+                    <span id="selectedCount">0</span> scan(s) selected
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm me-2" onclick="clearSelection()">
+                        <i class="bi bi-x-circle"></i> Clear Selection
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmBulkDelete()">
+                        <i class="bi bi-trash"></i> Delete Selected
+                    </button>
+                </div>
+            </div>
+
+            <!-- Select All Container -->
+            <div id="selectAllContainer" class="select-all-container" style="display: none;">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+                    <label class="form-check-label fw-semibold" for="selectAllCheckbox">
+                        Select All Scans
+                    </label>
+                </div>
+            </div>
+
             <!-- Scan List -->
             <div id="scanList" role="region" aria-live="polite">
                 <!-- Loading spinner -->
@@ -274,356 +210,40 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        let allScans = [];
-        let deleteTargetId = null;
-        let deleteModal = null;
-        const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
-
-        // Load users for admin filter
-        async function loadUsers() {
-            if (!isAdmin) return;
-
-            try {
-                const response = await fetch('/api/history/users');
-                const users = await response.json();
-
-                const userSelect = document.getElementById('specificUserSelect');
-                userSelect.innerHTML = '<option value="">Select a user...</option>';
-                users.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user.id;
-                    option.textContent = user.full_name ? `${user.username} (${user.full_name})` : user.username;
-                    userSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Failed to load users:', error);
-            }
-        }
-
-        // Handle user filter change
-        if (isAdmin) {
-            const userFilter = document.getElementById('userFilter');
-            const specificUserFilter = document.getElementById('specificUserFilter');
-            const specificUserSelect = document.getElementById('specificUserSelect');
-
-            userFilter.addEventListener('change', function() {
-                if (this.value === 'by-user') {
-                    specificUserFilter.style.display = 'block';
-                } else {
-                    specificUserFilter.style.display = 'none';
-                    loadScans();
-                }
-            });
-
-            specificUserSelect.addEventListener('change', function() {
-                if (this.value) {
-                    loadScans();
-                }
-            });
-        }
-
-        // Load statistics
-        async function loadStatistics() {
-            try {
-                const response = await fetch('/api/history/statistics');
-                const stats = await response.json();
-
-                const statsHtml = `
-                    <div class="col-md-4">
-                        <div class="stat-box">
-                            <div class="stat-number">${stats.total_scans}</div>
-                            <div class="stat-label">Total Scans${stats.is_user_specific ? ' (Your Scans)' : ''}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-box">
-                            <div class="stat-number">${stats.scans_by_status.completed || 0}</div>
-                            <div class="stat-label">Completed${stats.is_user_specific ? ' (Your Scans)' : ''}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-box">
-                            <div class="stat-number">${stats.total_violations.toLocaleString()}</div>
-                            <div class="stat-label">Total Violations${stats.is_user_specific ? ' (Your Scans)' : ''}</div>
-                        </div>
-                    </div>
-                `;
-
-                document.getElementById('statistics').innerHTML = statsHtml;
-            } catch (error) {
-                console.error('Failed to load statistics:', error);
-            }
-        }
-
-        // Load scan history
-        async function loadScans() {
-            try {
-                let url = '/api/history/scans?limit=100';
-
-                if (isAdmin) {
-                    const userFilter = document.getElementById('userFilter').value;
-                    if (userFilter === 'all') {
-                        url += '&all_scans=true';
-                    } else if (userFilter === 'by-user') {
-                        const userId = document.getElementById('specificUserSelect').value;
-                        if (userId) {
-                            url += `&user_id=${userId}`;
-                        }
-                    }
-                }
-
-                const response = await fetch(url);
-                allScans = await response.json();
-                displayScans(allScans);
-            } catch (error) {
-                console.error('Failed to load scans:', error);
-                document.getElementById('scanList').innerHTML = `
-                    <div class="alert alert-danger">
+    <!-- Bulk Delete Confirmation Modal -->
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill text-danger"></i> Confirm Bulk Delete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Are you sure you want to delete <span id="bulkDeleteCount">0</span> scan(s)?</strong></p>
+                    <div class="alert alert-warning" role="alert">
                         <i class="bi bi-exclamation-triangle"></i>
-                        Failed to load scan history. Please try refreshing the page.
+                        <strong>Warning:</strong> This action cannot be undone. All selected scans and their data will be permanently deleted.
                     </div>
-                `;
-            }
-        }
-
-        // Display scans
-        function displayScans(scans) {
-            const scanList = document.getElementById('scanList');
-
-            if (scans.length === 0) {
-                scanList.innerHTML = `
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox display-1 text-muted"></i>
-                        <h3 class="mt-3">No scans found</h3>
-                        <p class="text-muted">Start your first accessibility scan to see results here.</p>
-                        <a href="/" class="btn btn-outline-primary mt-3">
-                            <i class="bi bi-plus-circle"></i> Create New Scan
-                        </a>
+                    <div id="bulkDeleteList" class="mt-3" style="max-height: 200px; overflow-y: auto;">
+                        <!-- List of scans to delete will be shown here -->
                     </div>
-                `;
-                return;
-            }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="confirmBulkDeleteBtn" onclick="bulkDeleteScans()">
+                        <i class="bi bi-trash"></i> Delete All Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            let html = '';
-            scans.forEach(scan => {
-                const statusColors = {
-                    'completed': 'success',
-                    'running': 'primary',
-                    'in_progress': 'primary',
-                    'failed': 'danger'
-                };
-                const statusColor = statusColors[scan.status] || 'secondary';
-
-                const startDate = new Date(scan.start_time);
-                const formattedDate = startDate.toLocaleString();
-
-                html += `
-                    <div class="card scan-card mb-3">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-6">
-                                    <h5 class="card-title mb-2">
-                                        <i class="bi bi-link-45deg"></i>
-                                        <a href="${scan.start_url}" target="_blank" class="text-decoration-none">
-                                            ${truncateUrl(scan.start_url, 60)}
-                                        </a>
-                                    </h5>
-                                    <p class="text-muted small mb-1">
-                                        <i class="bi bi-clock"></i> ${formattedDate}
-                                    </p>
-                                    <p class="text-muted small mb-1">
-                                        <i class="bi bi-shield-check"></i>
-                                        ${scan.scan_mode === 'aoda' ? 'Ontario AODA' : 'WCAG 2.1'}
-                                    </p>
-                                    <p class="text-muted small mb-0">
-                                        <i class="bi bi-gear"></i>
-                                        Max Pages: ${scan.max_pages || 'N/A'} | Max Depth: ${scan.max_depth || 'N/A'}
-                                    </p>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="d-flex gap-4 justify-content-center mt-2 mt-md-0">
-                                        <div class="text-center">
-                                            <div class="fw-bold fs-5">${scan.pages_scanned}</div>
-                                            <div class="small text-muted">Pages</div>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="fw-bold fs-5 text-${scan.total_violations > 0 ? 'danger' : 'success'}">
-                                                ${scan.total_violations}
-                                            </div>
-                                            <div class="small text-muted">Issues</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-md-end mt-3 mt-md-0">
-                                    <span class="badge bg-${statusColor} mb-2 d-inline-block">
-                                        ${scan.status.toUpperCase()}
-                                    </span>
-                                    <br>
-                                    <div class="btn-group" role="group">
-                                        ${scan.status === 'completed' ? `
-                                            <a href="/results/${scan.scan_id}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i> View
-                                            </a>
-                                        ` : ''}
-                                        ${scan.status === 'failed' || scan.status === 'in_progress' ? `
-                                            <button
-                                                class="btn btn-sm btn-outline-primary"
-                                                onclick="confirmResume('${scan.scan_id}', '${scan.start_url.replace(/'/g, "\\'")}', ${scan.pages_scanned})">
-                                                <i class="bi bi-arrow-clockwise"></i> Resume
-                                            </button>
-                                        ` : ''}
-                                        <button
-                                            class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmDelete('${scan.scan_id}', '${scan.start_url.replace(/'/g, "\\'")}')">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            scanList.innerHTML = html;
-        }
-
-        function truncateUrl(url, maxLength) {
-            if (url.length <= maxLength) return url;
-            return url.substring(0, maxLength) + '...';
-        }
-
-        // Filter scans
-        function filterScans() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-
-            const filteredScans = allScans.filter(scan => {
-                const matchesSearch = scan.start_url.toLowerCase().includes(searchTerm);
-                const matchesStatus = !statusFilter || scan.status === statusFilter;
-                return matchesSearch && matchesStatus;
-            });
-
-            displayScans(filteredScans);
-        }
-
-        document.getElementById('searchInput').addEventListener('input', filterScans);
-        document.getElementById('statusFilter').addEventListener('change', filterScans);
-
-        // Delete confirmation
-        function confirmDelete(scanId, scanUrl) {
-            deleteTargetId = scanId;
-            document.getElementById('deleteUrl').textContent = scanUrl;
-
-            if (!deleteModal) {
-                deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            }
-            deleteModal.show();
-        }
-
-        // Delete scan
-        async function deleteScan() {
-            if (!deleteTargetId) return;
-
-            const deleteBtn = document.getElementById('confirmDeleteBtn');
-            const originalText = deleteBtn.innerHTML;
-
-            try {
-                deleteBtn.disabled = true;
-                deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deleting...';
-
-                const response = await fetch(`/api/history/scans/${deleteTargetId}`, {
-                    method: 'DELETE'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to delete scan');
-                }
-
-                deleteModal.hide();
-                await loadScans();
-                await loadStatistics();
-
-            } catch (error) {
-                console.error('Error deleting scan:', error);
-                alert('Failed to delete scan. Please try again.');
-            } finally {
-                deleteBtn.disabled = false;
-                deleteBtn.innerHTML = originalText;
-                deleteTargetId = null;
-            }
-        }
-
-        // Resume confirmation
-        let resumeTargetId = null;
-        let resumeModal = null;
-
-        function confirmResume(scanId, scanUrl, pagesScanned) {
-            resumeTargetId = scanId;
-            document.getElementById('resumeUrl').textContent = scanUrl;
-            document.getElementById('resumeProgress').textContent = pagesScanned.toLocaleString();
-
-            if (!resumeModal) {
-                resumeModal = new bootstrap.Modal(document.getElementById('resumeModal'));
-            }
-            resumeModal.show();
-        }
-
-        // Resume scan
-        async function resumeScan() {
-            if (!resumeTargetId) return;
-
-            const resumeBtn = document.getElementById('confirmResumeBtn');
-            const originalText = resumeBtn.innerHTML;
-
-            try {
-                resumeBtn.disabled = true;
-                resumeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Resuming...';
-
-                const response = await fetch(`/api/scan/resume/${resumeTargetId}`, {
-                    method: 'POST'
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Failed to resume scan');
-                }
-
-                const result = await response.json();
-                resumeModal.hide();
-
-                // Redirect to home page to show scan progress
-                window.location.href = `/?scan_id=${result.scan_id}&resumed=true`;
-
-            } catch (error) {
-                console.error('Error resuming scan:', error);
-                alert(`Failed to resume scan: ${error.message}`);
-                resumeBtn.disabled = false;
-                resumeBtn.innerHTML = originalText;
-                resumeTargetId = null;
-            }
-        }
-
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStatistics();
-            loadScans();
-            if (isAdmin) {
-                loadUsers();
-            }
-
-            // Auto-refresh every 30 seconds if there are running scans
-            setInterval(() => {
-                if (allScans.some(scan => scan.status === 'running')) {
-                    loadScans();
-                    loadStatistics();
-                }
-            }, 30000);
-        });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/history.js"></script>
 </body>
 </html>
 
