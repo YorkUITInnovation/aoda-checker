@@ -114,6 +114,9 @@
                     <button type="button" class="btn btn-sm me-2" onclick="clearSelection()">
                         <i class="bi bi-x-circle"></i> Clear Selection
                     </button>
+                    <button type="button" class="btn btn-sm btn-success me-2" onclick="exportToExcel()">
+                        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                    </button>
                     <button type="button" class="btn btn-sm btn-danger" onclick="confirmBulkDelete()">
                         <i class="bi bi-trash"></i> Delete Selected
                     </button>
@@ -239,6 +242,15 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Export Spinner Overlay -->
+    <div id="exportOverlay" class="export-overlay">
+        <div class="export-spinner-container">
+            <div class="export-spinner"></div>
+            <div class="export-spinner-text">Generating Excel Report...</div>
+            <div class="export-spinner-subtext">This may take a moment for large scans</div>
         </div>
     </div>
 

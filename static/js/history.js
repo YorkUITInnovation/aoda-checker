@@ -132,6 +132,77 @@ async function bulkDeleteScans() {
     }
 }
 
+// Export selected scans to Excel
+async function exportToExcel() {
+    const selectedIds = getSelectedScanIds();
+    if (selectedIds.length === 0) {
+        alert('Please select at least one scan to export.');
+        return;
+    }
+
+    // Check limit
+    if (selectedIds.length > 50) {
+        alert('You can only export up to 50 scans at once. Please select fewer scans.');
+        return;
+    }
+
+    const exportOverlay = document.getElementById('exportOverlay');
+
+    try {
+        // Show spinner
+        exportOverlay.classList.add('show');
+
+        const response = await fetch('/api/history/scans/export/bulk-excel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(selectedIds)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to generate Excel report');
+        }
+
+        // Get the blob from response
+        const blob = await response.blob();
+
+        // Get filename from Content-Disposition header
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'accessibility_report_bulk.xlsx';
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            if (filenameMatch) {
+                filename = filenameMatch[1];
+            }
+        }
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        // Clear selection after successful export
+        clearSelection();
+
+    } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        alert(`Failed to export scans: ${error.message}`);
+    } finally {
+        // Hide spinner
+        exportOverlay.classList.remove('show');
+    }
+}
+
 // Load users for admin filter
 async function loadUsers() {
     if (!isAdmin) return;
