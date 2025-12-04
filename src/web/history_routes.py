@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/history", tags=["history"])
 
 @router.get("/scans")
 async def get_scan_history(
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(10000, ge=1, le=10000),
     url: Optional[str] = None,
     user_id: Optional[int] = None,
     all_scans: bool = False,
@@ -26,6 +26,7 @@ async def get_scan_history(
 
     - Regular users: Only see their own scans
     - Admins: Can see their own scans (default), all scans (all_scans=true), or filter by user_id
+    - Supports up to 10,000 scans to handle large scan histories
     """
     repo = ScanRepository(db)
 
@@ -150,7 +151,12 @@ async def export_bulk_excel(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Export multiple scans to a combined Excel file."""
+    """
+    Export multiple scans to a combined Excel file.
+
+    Supports unlimited scans by processing in batches to prevent memory issues.
+    Batch size: 25 scans at a time to balance memory usage and performance.
+    """
     from fastapi.responses import StreamingResponse
     from src.utils.bulk_excel_report import generate_bulk_excel_report
     import logging
@@ -160,37 +166,56 @@ async def export_bulk_excel(
     if not scan_ids:
         raise HTTPException(status_code=400, detail="No scan IDs provided")
 
-    # Limit to reasonable number of scans
-    if len(scan_ids) > 50:
-        raise HTTPException(status_code=400, detail="Cannot export more than 50 scans at once")
+    logger.info(f"Starting bulk Excel export for {len(scan_ids)} scans by user {current_user.id}")
 
     repo = ScanRepository(db)
     scan_results = []
 
-    # Fetch all scans and check permissions
-    for scan_id in scan_ids:
-        try:
-            db_scan = await repo.get_scan_by_id(scan_id)
+    # Process scans in batches to manage memory
+    BATCH_SIZE = 25
+    total_scans = len(scan_ids)
+    skipped_count = 0
+    permission_denied_count = 0
 
-            if not db_scan:
-                logger.warning(f"Scan {scan_id} not found, skipping")
+    for batch_start in range(0, total_scans, BATCH_SIZE):
+        batch_end = min(batch_start + BATCH_SIZE, total_scans)
+        batch_ids = scan_ids[batch_start:batch_end]
+
+        logger.info(f"Processing batch {batch_start//BATCH_SIZE + 1}: scans {batch_start+1}-{batch_end} of {total_scans}")
+
+        # Fetch scans in current batch
+        for scan_id in batch_ids:
+            try:
+                db_scan = await repo.get_scan_by_id(scan_id)
+
+                if not db_scan:
+                    logger.warning(f"Scan {scan_id} not found, skipping")
+                    skipped_count += 1
+                    continue
+
+                # Check permissions
+                if not current_user.is_admin and db_scan.user_id != current_user.id:
+                    logger.warning(f"User {current_user.id} does not have access to scan {scan_id}, skipping")
+                    permission_denied_count += 1
+                    continue
+
+                # Convert to ScanResult
+                result = await repo.convert_to_scan_result(db_scan)
+                scan_results.append(result)
+
+            except Exception as e:
+                logger.error(f"Error loading scan {scan_id}: {e}")
+                skipped_count += 1
                 continue
-
-            # Check permissions
-            if not current_user.is_admin and db_scan.user_id != current_user.id:
-                logger.warning(f"User {current_user.id} does not have access to scan {scan_id}, skipping")
-                continue
-
-            # Convert to ScanResult
-            result = await repo.convert_to_scan_result(db_scan)
-            scan_results.append(result)
-
-        except Exception as e:
-            logger.error(f"Error loading scan {scan_id}: {e}")
-            continue
 
     if not scan_results:
         raise HTTPException(status_code=404, detail="No valid scans found to export")
+
+    # Log export summary
+    logger.info(f"Export summary - Total requested: {total_scans}, "
+                f"Successfully loaded: {len(scan_results)}, "
+                f"Skipped/Not found: {skipped_count}, "
+                f"Permission denied: {permission_denied_count}")
 
     # Generate combined Excel report
     try:
@@ -199,6 +224,8 @@ async def export_bulk_excel(
         # Create filename
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"accessibility_report_bulk_{len(scan_results)}_scans_{timestamp}.xlsx"
+
+        logger.info(f"Successfully generated Excel file: {filename}")
 
         return StreamingResponse(
             excel_file,

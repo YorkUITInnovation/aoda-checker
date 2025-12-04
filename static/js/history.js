@@ -6,6 +6,11 @@ let deleteModal = null;
 let bulkDeleteModal = null;
 const isAdmin = document.querySelector('body').dataset.isAdmin === 'true';
 
+// Pagination configuration
+const SCANS_PER_PAGE = 100;
+let currentPage = 1;
+let filteredScans = [];  // Scans after search/filter, before pagination
+
 // Bulk selection functions
 function getSelectedScanIds() {
     const checkboxes = document.querySelectorAll('.scan-checkbox:checked');
@@ -39,6 +44,21 @@ function toggleSelectAll(checked) {
     checkboxes.forEach(cb => {
         cb.checked = checked;
     });
+    updateSelection();
+}
+
+function selectAllScansAcrossAllPages() {
+    // Get all scan IDs from filtered scans
+    const allScanIds = filteredScans.map(scan => scan.scan_id);
+
+    // Check all checkboxes on current page
+    const checkboxes = document.querySelectorAll('.scan-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = true;
+    });
+
+    // Note: This only selects visible scans on current page
+    // To select across all pages would require different UX
     updateSelection();
 }
 
@@ -133,23 +153,68 @@ async function bulkDeleteScans() {
 }
 
 // Export selected scans to Excel
-async function exportToExcel() {
-    const selectedIds = getSelectedScanIds();
-    if (selectedIds.length === 0) {
-        alert('Please select at least one scan to export.');
-        return;
-    }
+async function exportToExcel(mode = 'selected') {
+    let scanIdsToExport = [];
 
-    // Check limit
-    if (selectedIds.length > 50) {
-        alert('You can only export up to 50 scans at once. Please select fewer scans.');
-        return;
+    if (mode === 'all') {
+        // Export all filtered scans (respects search/filter)
+        scanIdsToExport = filteredScans.map(scan => scan.scan_id);
+
+        if (scanIdsToExport.length === 0) {
+            alert('No scans available to export.');
+            return;
+        }
+
+        // Confirm for very large exports
+        if (scanIdsToExport.length > 100) {
+            const confirmed = confirm(
+                `You are about to export ALL ${scanIdsToExport.length} scans. ` +
+                `This may take several minutes to complete. ` +
+                `\n\nDo you want to continue?`
+            );
+            if (!confirmed) return;
+        } else {
+            // Confirm export all
+            const confirmed = confirm(
+                `Export all ${scanIdsToExport.length} scans to Excel?`
+            );
+            if (!confirmed) return;
+        }
+    } else {
+        // Export only selected scans on current page
+        scanIdsToExport = getSelectedScanIds();
+
+        if (scanIdsToExport.length === 0) {
+            alert('Please select at least one scan to export.');
+            return;
+        }
+
+        // Warn for very large exports
+        if (scanIdsToExport.length > 100) {
+            const confirmed = confirm(
+                `You are about to export ${scanIdsToExport.length} selected scans. ` +
+                `This may take several minutes to complete. ` +
+                `\n\nDo you want to continue?`
+            );
+            if (!confirmed) return;
+        }
     }
 
     const exportOverlay = document.getElementById('exportOverlay');
+    const spinnerText = document.querySelector('.export-spinner-text');
+    const spinnerSubtext = document.querySelector('.export-spinner-subtext');
 
     try {
-        // Show spinner
+        // Show spinner with appropriate message
+        if (mode === 'all') {
+            spinnerText.textContent = `Generating Excel Report for ${scanIdsToExport.length} Scans...`;
+        } else {
+            spinnerText.textContent = `Generating Excel Report for ${scanIdsToExport.length} Selected Scan${scanIdsToExport.length > 1 ? 's' : ''}...`;
+        }
+        spinnerSubtext.textContent = scanIdsToExport.length > 50
+            ? 'This may take several minutes for large exports'
+            : 'This may take a moment for large scans';
+
         exportOverlay.classList.add('show');
 
         const response = await fetch('/api/history/scans/export/bulk-excel', {
@@ -157,7 +222,7 @@ async function exportToExcel() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(selectedIds)
+            body: JSON.stringify(scanIdsToExport)
         });
 
         if (!response.ok) {
@@ -191,8 +256,10 @@ async function exportToExcel() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        // Clear selection after successful export
-        clearSelection();
+        // Clear selection after successful export (only for 'selected' mode)
+        if (mode === 'selected') {
+            clearSelection();
+        }
 
     } catch (error) {
         console.error('Error exporting to Excel:', error);
@@ -287,8 +354,20 @@ async function loadStatistics() {
 
 // Load scan history
 async function loadScans() {
+    const scanList = document.getElementById('scanList');
+
+    // Show loading indicator
+    scanList.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading scan history...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading scan history...</p>
+        </div>
+    `;
+
     try {
-        let url = '/api/history/scans?limit=100';
+        let url = '/api/history/scans?limit=10000';
 
         if (isAdmin) {
             const userFilter = document.getElementById('userFilter');
@@ -307,10 +386,12 @@ async function loadScans() {
 
         const response = await fetch(url);
         allScans = await response.json();
+
+        console.log(`Loaded ${allScans.length} scans from server`);
         displayScans(allScans);
     } catch (error) {
         console.error('Failed to load scans:', error);
-        document.getElementById('scanList').innerHTML = `
+        scanList.innerHTML = `
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-triangle"></i>
                 Failed to load scan history. Please try refreshing the page.
@@ -323,6 +404,11 @@ async function loadScans() {
 function displayScans(scans) {
     const scanList = document.getElementById('scanList');
     const selectAllContainer = document.getElementById('selectAllContainer');
+    const displayedCount = document.getElementById('displayedCount');
+    const totalCount = document.getElementById('totalCount');
+
+    // Store filtered scans for pagination
+    filteredScans = scans;
 
     if (scans.length === 0) {
         scanList.innerHTML = `
@@ -336,14 +422,36 @@ function displayScans(scans) {
             </div>
         `;
         selectAllContainer.style.display = 'none';
+        document.getElementById('paginationContainer').style.display = 'none';
         return;
     }
+
+    // Calculate pagination
+    const totalPages = Math.ceil(scans.length / SCANS_PER_PAGE);
+
+    // Ensure current page is valid
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+
+    const startIndex = (currentPage - 1) * SCANS_PER_PAGE;
+    const endIndex = Math.min(startIndex + SCANS_PER_PAGE, scans.length);
+    const paginatedScans = scans.slice(startIndex, endIndex);
 
     // Show select all container when there are scans
     selectAllContainer.style.display = 'block';
 
+    // Update counts - show range for current page
+    const displayStart = startIndex + 1;
+    const displayEnd = endIndex;
+    displayedCount.textContent = `${displayStart}-${displayEnd}`;
+    totalCount.textContent = scans.length;
+
     let html = '';
-    scans.forEach(scan => {
+    paginatedScans.forEach((scan, index) => {
         const statusColors = {
             'completed': 'success',
             'running': 'primary',
@@ -354,11 +462,17 @@ function displayScans(scans) {
 
         const startDate = new Date(scan.start_time);
         const formattedDate = startDate.toLocaleString();
+        const cardNumber = startIndex + index + 1;  // Absolute number across all pages
 
         html += `
             <div class="card scan-card mb-3">
                 <div class="card-body">
                     <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="scan-card-number">
+                                #${cardNumber}
+                            </div>
+                        </div>
                         <div class="col-auto">
                             <div class="form-check">
                                 <input
@@ -367,10 +481,10 @@ function displayScans(scans) {
                                     id="scan_${scan.scan_id}"
                                     value="${scan.scan_id}"
                                     onchange="updateSelection()"
-                                    aria-label="Select scan for ${scan.start_url}">
+                                    aria-label="Select scan number ${cardNumber} for ${scan.start_url}">
                             </div>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <h5 class="card-title mb-2">
                                 <i class="bi bi-link-45deg"></i>
                                 <a href="${scan.start_url}" target="_blank" class="text-decoration-none">
@@ -435,6 +549,10 @@ function displayScans(scans) {
     });
 
     scanList.innerHTML = html;
+
+    // Render pagination controls
+    renderPagination(totalPages, scans.length);
+
     updateSelection(); // Update selection state
 }
 
@@ -443,18 +561,109 @@ function truncateUrl(url, maxLength) {
     return url.substring(0, maxLength) + '...';
 }
 
+// Render pagination controls
+function renderPagination(totalPages, totalScans) {
+    const paginationContainer = document.getElementById('paginationContainer');
+
+    if (totalPages <= 1) {
+        paginationContainer.style.display = 'none';
+        return;
+    }
+
+    paginationContainer.style.display = 'block';
+
+    let html = '<nav aria-label="Scan history pagination"><ul class="pagination justify-content-center mb-0">';
+
+    // Previous button
+    html += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+    `;
+
+    // Page numbers with smart truncation
+    const maxVisiblePages = 7;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust start if we're near the end
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // First page + ellipsis
+    if (startPage > 1) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1); return false;">1</a></li>`;
+        if (startPage > 2) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+    }
+
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+            </li>
+        `;
+    }
+
+    // Ellipsis + last page
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a></li>`;
+    }
+
+    // Next button
+    html += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    `;
+
+    html += '</ul></nav>';
+
+    // Add page info text
+    html += `<div class="text-center mt-2 text-muted small">Page ${currentPage} of ${totalPages}</div>`;
+
+    paginationContainer.innerHTML = html;
+}
+
+// Change page function
+function changePage(newPage) {
+    const totalPages = Math.ceil(filteredScans.length / SCANS_PER_PAGE);
+
+    if (newPage < 1 || newPage > totalPages) {
+        return;
+    }
+
+    currentPage = newPage;
+    displayScans(filteredScans);
+
+    // Scroll to top of scan list
+    document.getElementById('scanList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // Filter scans
 function filterScans() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
 
-    const filteredScans = allScans.filter(scan => {
+    const filtered = allScans.filter(scan => {
         const matchesSearch = scan.start_url.toLowerCase().includes(searchTerm);
         const matchesStatus = !statusFilter || scan.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
 
-    displayScans(filteredScans);
+    // Reset to page 1 when filtering
+    currentPage = 1;
+    displayScans(filtered);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
