@@ -9,6 +9,14 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "AODA Compliance Checker"
     app_version: str = "1.0.0"
+    wwwroot: str = ""  # Alternative name for app_url (WWWROOT env var)
+    app_url: str = "http://localhost:8080"  # Public URL for email links (configurable via APP_URL or WWWROOT env var)
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # If WWWROOT is set, use it as app_url
+        if self.wwwroot:
+            self.app_url = self.wwwroot
 
     # Security
     secret_key: str = "change-this-secret-key-in-production"  # Used for sessions and JWT
@@ -42,6 +50,15 @@ class Settings(BaseSettings):
     # MySQL connection pool settings
     db_pool_size: int = 10
     db_max_overflow: int = 20
+
+    # Email settings
+    smtp_host: str = "localhost"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = True
+    smtp_from_email: str = "noreply@aoda-checker.local"
+    smtp_from_name: str = "AODA Compliance Checker"
 
     class Config:
         env_file = ".env"

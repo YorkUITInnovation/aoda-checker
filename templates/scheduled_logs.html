@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Task Logs - AODA Compliance Checker</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom styles -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/scheduled-logs.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Skip link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    {% include 'includes/navbar.html' %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <main id="main-content">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold">
+                        <i class="bi bi-journal-text"></i> Scheduled Task Logs
+                    </h1>
+                    <p class="text-muted">
+                        View execution history of your scheduled scans
+                    </p>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div id="statistics" class="row g-3 mb-4">
+                <!-- Statistics will be loaded here -->
+            </div>
+
+            <!-- Filters and Actions -->
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label fw-semibold">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="success">Success</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="startDate" class="form-label fw-semibold">From Date</label>
+                    <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label for="endDate" class="form-label fw-semibold">To Date</label>
+                    <input type="date" class="form-control" id="endDate">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        <i class="bi bi-x-circle"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="sortBy" class="form-label fw-semibold">Sort By</label>
+                    <select class="form-select" id="sortBy">
+                        <option value="executed_at">Execution Time</option>
+                        <option value="status">Status</option>
+                        <option value="start_url">URL</option>
+                        <option value="duration_seconds">Duration</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="sortOrder" class="form-label fw-semibold">Order</label>
+                    <select class="form-select" id="sortOrder">
+                        <option value="desc">Newest First</option>
+                        <option value="asc">Oldest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bulk Action Bar -->
+            <div id="bulkActionBar" class="bulk-action-bar" role="alert" aria-live="polite">
+                <div class="selection-info">
+                    <i class="bi bi-check-square"></i>
+                    <span id="selectedCount">0</span> log(s) selected
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm me-2" onclick="clearSelection()">
+                        <i class="bi bi-x-circle"></i> Clear Selection
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmBulkDelete()">
+                        <i class="bi bi-trash"></i> Delete Selected
+                    </button>
+                </div>
+            </div>
+
+            <!-- Select All Container -->
+            <div id="selectAllContainer" class="select-all-container" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+                        <label class="form-check-label fw-semibold" for="selectAllCheckbox">
+                            Select All on This Page
+                        </label>
+                    </div>
+                    <div class="text-muted small">
+                        Showing <strong><span id="displayedCount">0</span></strong> of <strong><span id="totalCount">0</span></strong> logs
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs List -->
+            <div id="logsList" role="region" aria-live="polite">
+                <!-- Loading spinner -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading logs...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Loading scheduled task logs...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="paginationContainer" class="mt-4" style="display: none;">
+                <!-- Pagination will be rendered here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill text-danger"></i> Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Are you sure you want to delete this log entry?</strong></p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="confirmDeleteBtn" onclick="deleteLog()">
+                        Delete Log
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Delete Confirmation Modal -->
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill text-danger"></i> Confirm Bulk Delete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Are you sure you want to delete <span id="bulkDeleteCount">0</span> log(s)?</strong></p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="confirmBulkDeleteBtn" onclick="bulkDeleteLogs()">
+                        <i class="bi bi-trash"></i> Delete All Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/scheduled-logs.js"></script>
+</body>
+</html>
+

@@ -20,7 +20,7 @@ from src.config import settings
 from src.database import init_db, get_db
 from src.database.repository import ScanRepository
 from src.database.models import ScanStatus, User
-from src.web.dependencies import get_current_user, get_current_active_user
+from src.web.dependencies import get_current_user, get_current_active_user, get_current_admin_user
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,10 +40,26 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize database: {e}")
         logger.warning("Application will continue without database persistence")
 
+    # Initialize scheduler
+    logger.info("Initializing scheduler service...")
+    try:
+        from src.utils.scheduler_service import scheduler_service
+        await scheduler_service.initialize()
+        logger.info("Scheduler service initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize scheduler service: {e}")
+        logger.warning("Application will continue without scheduled scans")
+
     yield
 
     # Shutdown
     logger.info("Shutting down application...")
+    try:
+        from src.utils.scheduler_service import scheduler_service
+        await scheduler_service.shutdown()
+        logger.info("Scheduler service shut down successfully")
+    except Exception as e:
+        logger.error(f"Error shutting down scheduler: {e}")
 
 
 # Create FastAPI app with lifespan
@@ -108,6 +124,140 @@ scan_results: Dict[str, ScanResult] = {}
 # Register batch scan routes
 from src.web.batch_scan_routes import router as batch_router
 app.include_router(batch_router)
+
+# Register scheduled scan routes
+from src.web.scheduled_scan_routes import router as scheduled_scan_router
+app.include_router(scheduled_scan_router)
+
+# Register history routes
+from src.web.history_routes import router as history_router
+app.include_router(history_router)
+
+# Register auth routes
+from src.web.auth_routes import router as auth_router
+app.include_router(auth_router)
+
+# Register admin routes
+from src.web.admin_routes import router as admin_router
+app.include_router(admin_router)
+
+# Register check config routes
+from src.web.check_config_routes import router as check_config_router
+app.include_router(check_config_router)
+
+# Register scheduled scan log routes
+from src.web.scheduled_log_routes import router as scheduled_log_router
+app.include_router(scheduled_log_router)
+
+
+# Admin Test Email API Route (registered at app level for correct path)
+from pydantic import BaseModel as PydanticBaseModel
+
+class TestEmailRequest(PydanticBaseModel):
+    """Test email request model."""
+    test_email: str
+
+@app.post("/api/admin/test-email")
+async def send_test_email_api(
+    email_request: TestEmailRequest,
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Send a test email to verify SMTP configuration."""
+    from src.utils.email_service import EmailService
+    from src.config import settings
+    from datetime import datetime
+
+    # Validate email configuration
+    if not settings.smtp_host:
+        raise HTTPException(
+            status_code=400,
+            detail="SMTP host is not configured. Please configure SMTP settings in your .env file."
+        )
+
+    # Create test email content
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #0d6efd; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }}
+            .content {{ background-color: #f8f9fa; padding: 30px; border: 1px solid #dee2e6; }}
+            .success-icon {{ font-size: 48px; color: #28a745; text-align: center; margin: 20px 0; }}
+            .info-box {{ background-color: #e7f1ff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0; }}
+            .footer {{ text-align: center; padding: 20px; color: #6c757d; font-size: 14px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header"><h1>✅ Test Email Successful</h1></div>
+            <div class="content">
+                <div class="success-icon">✓</div>
+                <h2>SMTP Configuration Test</h2>
+                <p>Congratulations! Your SMTP configuration is working correctly.</p>
+                <div class="info-box">
+                    <strong>Configuration Details:</strong>
+                    <ul>
+                        <li>SMTP Host: {settings.smtp_host}</li>
+                        <li>SMTP Port: {settings.smtp_port}</li>
+                        <li>Use TLS: {'Yes' if settings.smtp_use_tls else 'No'}</li>
+                        <li>From: {settings.smtp_from_name} &lt;{settings.smtp_from_email}&gt;</li>
+                    </ul>
+                </div>
+                <p><strong>What this means:</strong></p>
+                <ul>
+                    <li>✅ Your email server connection is working</li>
+                    <li>✅ Authentication is successful</li>
+                    <li>✅ Emails can be delivered</li>
+                    <li>✅ Scheduled scan notifications will work</li>
+                </ul>
+            </div>
+            <div class="footer">
+                <p>This is a test email from AODA Compliance Checker</p>
+                <p>Sent on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    text_content = f"""
+    SMTP Configuration Test - Success!
+    
+    Your SMTP configuration is working correctly.
+    
+    Configuration: {settings.smtp_host}:{settings.smtp_port}
+    From: {settings.smtp_from_name} <{settings.smtp_from_email}>
+    
+    Sent on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+    """
+
+    try:
+        success = await EmailService.send_email(
+            to_email=email_request.test_email,
+            subject="✅ AODA Checker - SMTP Configuration Test",
+            html_content=html_content,
+            text_content=text_content
+        )
+
+        if success:
+            return {
+                "message": "Test email sent successfully",
+                "recipient": email_request.test_email,
+                "smtp_host": settings.smtp_host,
+                "smtp_port": settings.smtp_port
+            }
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to send test email. Please check your SMTP configuration and server logs."
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error sending test email: {str(e)}"
+        )
 
 
 @app.get("/", response_class=HTMLResponse)

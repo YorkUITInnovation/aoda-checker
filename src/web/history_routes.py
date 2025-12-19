@@ -57,6 +57,22 @@ async def get_scan_history(
         else:
             scans = await repo.get_scans_by_user(current_user.id, limit)
 
+    # Get scheduled scans for this user to match with scan URLs
+    from src.database.scheduled_scan_repository import ScheduledScanRepository
+    scheduled_repo = ScheduledScanRepository(db)
+    scheduled_scans = await scheduled_repo.get_user_scheduled_scans(current_user.id)
+
+    # Create a mapping of URL to scheduled scan info
+    scheduled_by_url = {}
+    for sched in scheduled_scans:
+        if sched.is_active:
+            scheduled_by_url[sched.start_url] = {
+                "schedule_id": sched.id,
+                "frequency": sched.frequency.value,
+                "schedule_time": sched.schedule_time,
+                "next_run": sched.next_run.isoformat() if sched.next_run else None
+            }
+
     return [{
         "scan_id": scan.scan_id,
         "start_url": scan.start_url,
@@ -68,7 +84,8 @@ async def get_scan_history(
         "scan_mode": getattr(scan, 'scan_mode', 'aoda'),
         "start_time": scan.start_time.isoformat(),
         "end_time": scan.end_time.isoformat() if scan.end_time else None,
-        "user_id": scan.user_id
+        "user_id": scan.user_id,
+        "scheduled_scan": scheduled_by_url.get(scan.start_url)  # Add scheduled scan info
     } for scan in scans]
 
 

@@ -521,6 +521,11 @@ function displayScans(scans) {
                             <span class="badge bg-${statusColor} mb-2 d-inline-block">
                                 ${scan.status.toUpperCase()}
                             </span>
+                            ${scan.scheduled_scan ? `
+                                <span class="badge bg-info mb-2 d-inline-block ms-1" title="This URL has a scheduled scan: ${scan.scheduled_scan.frequency} at ${scan.scheduled_scan.schedule_time}">
+                                    <i class="bi bi-calendar-check-fill"></i> Scheduled
+                                </span>
+                            ` : ''}
                             <br>
                             <div class="btn-group" role="group">
                                 ${scan.status === 'completed' ? `
@@ -535,6 +540,18 @@ function displayScans(scans) {
                                         <i class="bi bi-arrow-clockwise"></i> Resume
                                     </button>
                                 ` : ''}
+                                ${scan.scheduled_scan ? `
+                                    <button
+                                        class="btn btn-sm btn-outline-warning"
+                                        onclick="manageSchedule(${scan.scheduled_scan.schedule_id}, '${scan.start_url.replace(/'/g, "\\'")}', '${scan.scheduled_scan.frequency}', '${scan.scheduled_scan.schedule_time}')"
+                                        title="Manage scheduled scan">
+                                        <i class="bi bi-calendar-event"></i> Manage
+                                    </button>
+                                ` : `
+                                    <a href="/schedule/new?scan_id=${scan.scan_id}" class="btn btn-sm btn-outline-success" title="Schedule recurring scans for this URL">
+                                        <i class="bi bi-calendar-check"></i> Schedule
+                                    </a>
+                                `}
                                 <button
                                     class="btn btn-sm btn-outline-danger"
                                     onclick="confirmDelete('${scan.scan_id}', '${scan.start_url.replace(/'/g, "\\'")}')">
@@ -654,11 +671,34 @@ function changePage(newPage) {
 function filterScans() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
 
     const filtered = allScans.filter(scan => {
         const matchesSearch = scan.start_url.toLowerCase().includes(searchTerm);
         const matchesStatus = !statusFilter || scan.status === statusFilter;
-        return matchesSearch && matchesStatus;
+
+        // Date filtering
+        let matchesDateRange = true;
+        if (startDate || endDate) {
+            const scanDate = new Date(scan.start_time);
+
+            if (startDate) {
+                // Parse date string manually to avoid timezone issues (YYYY-MM-DD format)
+                const [year, month, day] = startDate.split('-').map(Number);
+                const filterStartDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+                matchesDateRange = matchesDateRange && scanDate >= filterStartDate;
+            }
+
+            if (endDate) {
+                // Parse date string manually to avoid timezone issues (YYYY-MM-DD format)
+                const [year, month, day] = endDate.split('-').map(Number);
+                const filterEndDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+                matchesDateRange = matchesDateRange && scanDate <= filterEndDate;
+            }
+        }
+
+        return matchesSearch && matchesStatus && matchesDateRange;
     });
 
     // Reset to page 1 when filtering
@@ -666,9 +706,18 @@ function filterScans() {
     displayScans(filtered);
 }
 
+// Clear date filter
+function clearDateFilter() {
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    filterScans();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
 
     if (searchInput) {
         searchInput.addEventListener('input', filterScans);
@@ -676,6 +725,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (statusFilter) {
         statusFilter.addEventListener('change', filterScans);
+    }
+
+    if (startDate) {
+        startDate.addEventListener('change', filterScans);
+    }
+
+    if (endDate) {
+        endDate.addEventListener('change', filterScans);
     }
 });
 
@@ -789,4 +846,64 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 30000);
 });
+
+// Manage scheduled scan
+let manageScheduleModal = null;
+let currentScheduleId = null;
+
+function manageSchedule(scheduleId, url, frequency, time) {
+    currentScheduleId = scheduleId;
+
+    document.getElementById('scheduleUrl').textContent = url;
+    document.getElementById('scheduleFrequency').textContent = frequency.charAt(0).toUpperCase() + frequency.slice(1);
+    document.getElementById('scheduleTime').textContent = time;
+
+    if (!manageScheduleModal) {
+        manageScheduleModal = new bootstrap.Modal(document.getElementById('manageScheduleModal'));
+    }
+    manageScheduleModal.show();
+}
+
+async function deleteScheduledScan() {
+    if (!currentScheduleId) return;
+
+    const deleteBtn = document.getElementById('confirmDeleteScheduleBtn');
+    const originalText = deleteBtn.innerHTML;
+
+    try {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deleting...';
+
+        const response = await fetch(`/api/scheduled-scans/${currentScheduleId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to delete scheduled scan');
+        }
+
+        manageScheduleModal.hide();
+        currentScheduleId = null;
+
+        // Show success message
+        alert('Scheduled scan deleted successfully!');
+
+        // Reload scans to update the badges
+        await loadScans();
+
+    } catch (error) {
+        console.error('Error deleting scheduled scan:', error);
+        alert(`Failed to delete scheduled scan: ${error.message}`);
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = originalText;
+    }
+}
+
+async function editScheduledScan() {
+    if (!currentScheduleId) return;
+
+    // Navigate to edit page (we can implement this later or redirect to schedule page)
+    window.location.href = `/schedule/new?schedule_id=${currentScheduleId}`;
+}
 

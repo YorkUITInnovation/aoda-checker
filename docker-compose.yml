@@ -1,4 +1,20 @@
 services:
+  mailhog:
+    image: 'docker.io/mailhog/mailhog'
+    container_name: aoda-mailhog
+    ports:
+      - '1025:1025'  # SMTP port
+      - '8025:8025'  # Web UI port
+    networks:
+      - aoda-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8025"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
   mysql:
     image: mysql:8.4
     container_name: aoda-mysql
@@ -25,6 +41,8 @@ services:
   aoda-checker:
     build: .
     container_name: aoda-compliance-checker
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     volumes:
@@ -33,6 +51,7 @@ services:
     environment:
       - APP_NAME=AODA Compliance Checker
       - APP_VERSION=1.0.0
+      - APP_URL=${APP_URL:-http://localhost:8080}
       - HOST=0.0.0.0
       - PORT=8080
       # Timezone configuration
@@ -47,7 +66,17 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
       - JWT_ALGORITHM=HS256
       - JWT_EXPIRATION_MINUTES=480
+      # Email/SMTP configuration (for scheduled scans)
+      - SMTP_HOST=${SMTP_HOST:-mailhog}
+      - SMTP_PORT=${SMTP_PORT:-1025}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-false}
+      - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL:-noreply@aoda-checker.local}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-AODA Compliance Checker}
     depends_on:
+      mailhog:
+        condition: service_healthy
       mysql:
         condition: service_healthy
     restart: unless-stopped

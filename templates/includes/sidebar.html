@@ -26,6 +26,12 @@
                     <span>My Checks</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if active_page == 'scheduled_logs' else '' }}" href="/scheduled-logs">
+                    <i class="bi bi-journal-text" aria-hidden="true"></i>
+                    <span>Scheduled Task Logs</span>
+                </a>
+            </li>
 
             {% if current_user.is_admin %}
             <li class="nav-item mt-3">
@@ -44,6 +50,12 @@
                 <a class="nav-link {{ 'active' if active_page == 'checks' else '' }}" href="/admin/checks">
                     <i class="bi bi-gear-fill" aria-hidden="true"></i>
                     <span>Check Configuration</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if active_page == 'test_email' else '' }}" href="/admin/test-email">
+                    <i class="bi bi-envelope-check" aria-hidden="true"></i>
+                    <span>Test Email</span>
                 </a>
             </li>
             {% endif %}

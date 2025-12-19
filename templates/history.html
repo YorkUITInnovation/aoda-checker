@@ -80,7 +80,7 @@
             </div>
 
             <!-- Search and Filter -->
-            <div class="row mb-4">
+            <div class="row mb-3">
                 <div class="col-md-8">
                     <label for="searchInput" class="visually-hidden">Search scans by URL</label>
                     <div class="input-group">
@@ -104,6 +104,37 @@
                         <option value="running">Running</option>
                         <option value="failed">Failed</option>
                     </select>
+                </div>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label for="startDate" class="form-label fw-semibold">
+                        <i class="bi bi-calendar-range"></i> From Date
+                    </label>
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="startDate"
+                        title="Filter scans from this date onwards"
+                    >
+                </div>
+                <div class="col-md-4">
+                    <label for="endDate" class="form-label fw-semibold">
+                        <i class="bi bi-calendar-range"></i> To Date
+                    </label>
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="endDate"
+                        title="Filter scans up to this date"
+                    >
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-secondary w-100" onclick="clearDateFilter()">
+                        <i class="bi bi-x-circle"></i> Clear Date Filter
+                    </button>
                 </div>
             </div>
 
@@ -266,6 +297,54 @@
                     </button>
                     <button type="button" class="btn btn-outline-danger" id="confirmBulkDeleteBtn" onclick="bulkDeleteScans()">
                         <i class="bi bi-trash"></i> Delete All Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Schedule Modal -->
+    <div class="modal fade" id="manageScheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-calendar-event text-info"></i> Manage Scheduled Scan
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Scheduled Scan Details</strong></p>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="mb-2">
+                                <i class="bi bi-link-45deg"></i>
+                                <strong>URL:</strong><br>
+                                <span id="scheduleUrl" class="text-break small"></span>
+                            </p>
+                            <p class="mb-2">
+                                <i class="bi bi-arrow-repeat"></i>
+                                <strong>Frequency:</strong>
+                                <span id="scheduleFrequency"></span>
+                            </p>
+                            <p class="mb-0">
+                                <i class="bi bi-clock"></i>
+                                <strong>Time:</strong>
+                                <span id="scheduleTime"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> Deleting the schedule will stop future automatic scans. Past scan results will not be affected.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="confirmDeleteScheduleBtn" onclick="deleteScheduledScan()">
+                        <i class="bi bi-trash"></i> Delete Schedule
                     </button>
                 </div>
             </div>

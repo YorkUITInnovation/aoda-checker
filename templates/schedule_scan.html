@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Scan - AODA Compliance Checker</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom styles -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Skip link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    {% include 'includes/navbar.html' %}
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <main id="main-content">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold">
+                        <i class="bi bi-calendar-check"></i> Schedule Recurring Scan
+                    </h1>
+                    <p class="text-muted">
+                        Set up automatic accessibility scans with email notifications
+                    </p>
+                </div>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Schedule Form -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <form id="scheduleForm">
+                        <!-- URL Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Scan Configuration</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="startUrl" class="form-label fw-semibold">
+                                        Website URL <span class="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="url"
+                                        class="form-control"
+                                        id="startUrl"
+                                        name="start_url"
+                                        placeholder="https://example.com"
+                                        required
+                                        {% if scan_data %}value="{{ scan_data.start_url }}"{% endif %}
+                                    >
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="maxPages" class="form-label fw-semibold">Max Pages</label>
+                                        <input
+                                            type="number"
+                                            class="form-control"
+                                            id="maxPages"
+                                            name="max_pages"
+                                            min="1"
+                                            value="{% if scan_data %}{{ scan_data.max_pages }}{% else %}50{% endif %}"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="maxDepth" class="form-label fw-semibold">Max Depth</label>
+                                        <input
+                                            type="number"
+                                            class="form-control"
+                                            id="maxDepth"
+                                            name="max_depth"
+                                            min="1"
+                                            max="10"
+                                            value="{% if scan_data %}{{ scan_data.max_depth }}{% else %}3{% endif %}"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Scan Configuration:</strong> This scheduled scan will use your check configuration from <a href="/checks" class="alert-link">My Checks</a>.
+                                </div>
+
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        id="sameDomainOnly"
+                                        name="same_domain_only"
+                                        {% if not scan_data or scan_data.same_domain_only %}checked{% endif %}
+                                    >
+                                    <label class="form-check-label" for="sameDomainOnly">
+                                        Only scan pages on the same domain
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Schedule</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="frequency" class="form-label fw-semibold">
+                                            Frequency <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" id="frequency" name="frequency" required onchange="updateScheduleFields()">
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="yearly">Yearly</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="scheduleTime" class="form-label fw-semibold">
+                                            Time <span class="text-danger">*</span>
+                                        </label>
+                                        <input
+                                            type="time"
+                                            class="form-control"
+                                            id="scheduleTime"
+                                            name="schedule_time"
+                                            value="02:00"
+                                            required
+                                            step="60"
+                                            title="Enter time in 24-hour format (HH:MM)"
+                                        >
+                                        <small class="text-muted">Use 24-hour format (e.g., 14:00 for 2:00 PM, 02:00 for 2:00 AM)</small>
+                                    </div>
+                                </div>
+
+                                <!-- Weekly option -->
+                                <div id="weeklyOptions" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="dayOfWeek" class="form-label fw-semibold">Day of Week</label>
+                                        <select class="form-select" id="dayOfWeek" name="day_of_week">
+                                            <option value="0">Monday</option>
+                                            <option value="1">Tuesday</option>
+                                            <option value="2">Wednesday</option>
+                                            <option value="3">Thursday</option>
+                                            <option value="4">Friday</option>
+                                            <option value="5">Saturday</option>
+                                            <option value="6">Sunday</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Monthly option -->
+                                <div id="monthlyOptions" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="dayOfMonth" class="form-label fw-semibold">Day of Month</label>
+                                        <input
+                                            type="number"
+                                            class="form-control"
+                                            id="dayOfMonth"
+                                            name="day_of_month"
+                                            min="1"
+                                            max="31"
+                                            value="1"
+                                        >
+                                        <small class="text-muted">Day 1-31 (for months with fewer days, scan will run on last day)</small>
+                                    </div>
+                                </div>
+
+                                <!-- Yearly option -->
+                                <div id="yearlyOptions" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="monthOfYear" class="form-label fw-semibold">Month</label>
+                                            <select class="form-select" id="monthOfYear" name="month_of_year">
+                                                <option value="1">January</option>
+                                                <option value="2">February</option>
+                                                <option value="3">March</option>
+                                                <option value="4">April</option>
+                                                <option value="5">May</option>
+                                                <option value="6">June</option>
+                                                <option value="7">July</option>
+                                                <option value="8">August</option>
+                                                <option value="9">September</option>
+                                                <option value="10">October</option>
+                                                <option value="11">November</option>
+                                                <option value="12">December</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="yearlyDayOfMonth" class="form-label fw-semibold">Day</label>
+                                            <input
+                                                type="number"
+                                                class="form-control"
+                                                id="yearlyDayOfMonth"
+                                                min="1"
+                                                max="31"
+                                                value="1"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email Notifications Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-envelope"></i> Email Notifications</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        id="emailNotifications"
+                                        name="email_notifications"
+                                        checked
+                                        onchange="toggleEmailOptions()"
+                                    >
+                                    <label class="form-check-label fw-semibold" for="emailNotifications">
+                                        Enable email notifications
+                                    </label>
+                                </div>
+
+                                <div id="emailOptions">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Note:</strong> Emails will be sent to: <strong>{{ current_user.email if current_user.email else 'No email on file' }}</strong>
+                                        {% if not current_user.email %}
+                                        <br><span class="text-danger">Please update your profile with an email address to receive notifications.</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="form-check mb-2">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            id="notifyOnErrors"
+                                            name="notify_on_errors"
+                                            checked
+                                        >
+                                        <label class="form-check-label" for="notifyOnErrors">
+                                            Notify when <strong>errors</strong> (critical/serious violations) are found
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            id="notifyOnViolations"
+                                            name="notify_on_violations"
+                                            checked
+                                        >
+                                        <label class="form-check-label" for="notifyOnViolations">
+                                            Notify when <strong>any violations</strong> are found
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-calendar-check"></i> Schedule Scan
+                            </button>
+                            <a href="/history" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Info Sidebar -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> About Scheduled Scans</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>What are scheduled scans?</h6>
+                            <p>Scheduled scans automatically run at your specified frequency, helping you:</p>
+                            <ul>
+                                <li>Monitor accessibility continuously</li>
+                                <li>Catch new violations early</li>
+                                <li>Track compliance over time</li>
+                                <li>Stay informed with email alerts</li>
+                            </ul>
+
+                            <h6 class="mt-4">Email notifications</h6>
+                            <p>Choose when to receive notifications:</p>
+                            <ul>
+                                <li><strong>Errors only:</strong> Get notified about critical/serious issues</li>
+                                <li><strong>All violations:</strong> Get notified about any accessibility issues</li>
+                                <li><strong>Disabled:</strong> No email notifications</li>
+                            </ul>
+
+                            <div class="alert alert-warning mt-3">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Note:</strong> You can pause, edit, or delete scheduled scans anytime from your scan history.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function updateScheduleFields() {
+            const frequency = document.getElementById('frequency').value;
+
+            // Hide all optional fields
+            document.getElementById('weeklyOptions').style.display = 'none';
+            document.getElementById('monthlyOptions').style.display = 'none';
+            document.getElementById('yearlyOptions').style.display = 'none';
+
+            // Show relevant fields
+            if (frequency === 'weekly') {
+                document.getElementById('weeklyOptions').style.display = 'block';
+            } else if (frequency === 'monthly') {
+                document.getElementById('monthlyOptions').style.display = 'block';
+            } else if (frequency === 'yearly') {
+                document.getElementById('yearlyOptions').style.display = 'block';
+            }
+        }
+
+        function toggleEmailOptions() {
+            const emailEnabled = document.getElementById('emailNotifications').checked;
+            const emailOptions = document.getElementById('emailOptions');
+            emailOptions.style.display = emailEnabled ? 'block' : 'none';
+        }
+
+        // Form submission
+        document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {
+                start_url: formData.get('start_url'),
+                max_pages: parseInt(formData.get('max_pages')),
+                max_depth: parseInt(formData.get('max_depth')),
+                same_domain_only: formData.get('same_domain_only') === 'on',
+                frequency: formData.get('frequency'),
+                schedule_time: formData.get('schedule_time'),
+                email_notifications: formData.get('email_notifications') === 'on',
+                notify_on_errors: formData.get('notify_on_errors') === 'on',
+                notify_on_violations: formData.get('notify_on_violations') === 'on'
+            };
+
+            // Add frequency-specific fields
+            if (data.frequency === 'weekly') {
+                data.day_of_week = parseInt(formData.get('day_of_week'));
+            } else if (data.frequency === 'monthly') {
+                data.day_of_month = parseInt(formData.get('day_of_month'));
+            } else if (data.frequency === 'yearly') {
+                data.month_of_year = parseInt(formData.get('month_of_year'));
+                data.day_of_month = parseInt(document.getElementById('yearlyDayOfMonth').value);
+            }
+
+            try {
+                const response = await fetch('/api/scheduled-scans', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('success', 'Scheduled scan created successfully! Redirecting to scan history...');
+                    setTimeout(() => {
+                        window.location.href = '/history';
+                    }, 2000);
+                } else {
+                    showAlert('danger', result.detail || 'Failed to create scheduled scan');
+                }
+            } catch (error) {
+                showAlert('danger', 'An error occurred while creating the scheduled scan');
+                console.error('Error:', error);
+            }
+        });
+
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+
+        // Initialize on load
+        updateScheduleFields();
+    </script>
+</body>
+</html>
+

@@ -246,3 +246,70 @@ a:focus, button:focus, input:focus, select:focus {
     border-color: #dee2e6;
 }
 
+/* Date Range Filter Styles */
+#startDate,
+#endDate {
+    cursor: pointer;
+}
+
+#startDate::-webkit-calendar-picker-indicator,
+#endDate::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* Make date inputs more accessible and visible */
+input[type="date"] {
+    position: relative;
+}
+
+input[type="date"]:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Clear button styling for date filter */
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
+/* Scheduled scan badge styling */
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #fff !important;
+    font-weight: 600;
+}
+
+.badge i.bi-calendar-check-fill {
+    margin-right: 3px;
+}
+
+/* Manage schedule button styling */
+.btn-outline-warning {
+    color: #996600;
+    border-color: #ffc107;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+/* Schedule modal styling */
+#manageScheduleModal .card {
+    background-color: #f8f9fa;
+    border-left: 4px solid #0dcaf0;
+}
+
+#manageScheduleModal .card-body p {
+    margin-bottom: 0.75rem;
+}
+
+#manageScheduleModal .card-body p:last-child {
+    margin-bottom: 0;
+}
+
+

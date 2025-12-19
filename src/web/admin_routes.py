@@ -376,3 +376,40 @@ async def delete_user_api(
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "User deleted successfully"}
+
+
+# Test Email Page Route (API endpoint is in app.py)
+
+@router.get("/test-email", response_class=HTMLResponse)
+async def admin_test_email_page(
+    request: Request,
+    current_user: User = Depends(get_current_admin_user)
+):
+    """Render the test email page."""
+    from src.config import settings
+
+    smtp_config = {
+        "host": settings.smtp_host,
+        "port": settings.smtp_port,
+        "username": settings.smtp_username,
+        "use_tls": settings.smtp_use_tls,
+        "from_email": settings.smtp_from_email,
+        "from_name": settings.smtp_from_name
+    }
+
+    return templates.TemplateResponse(
+        "admin_test_email.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "smtp_config": smtp_config,
+            "active_page": "test_email"
+        }
+    )
+
+# Note: The test email API endpoint is registered in app.py at /api/admin/test-email
+# to avoid path conflicts with the /admin router prefix
+
+
+
+

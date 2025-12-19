@@ -7,6 +7,7 @@ An automated AODA/WCAG AA compliance checker that crawls websites and generates 
 ## Features
 
 - ✅ **User Authentication & Management** - Secure login, user roles, admin panel
+- ✅ **Scheduled Scans** - Automate recurring scans with email notifications 📧 **NEW!**
 - ✅ **Dual Scan Modes** - Choose between Ontario AODA/IASR (WCAG 2.0 AA) or Full WCAG 2.1 AA
 - ✅ Crawl websites and analyze accessibility
 - ✅ WCAG 2.1 AA compliance testing using axe-core
@@ -94,6 +95,49 @@ The application now includes a comprehensive authentication system:
 
 📚 **Quick Start**: See [QUICKSTART_AUTH.md](QUICKSTART_AUTH.md)  
 📖 **Full Documentation**: See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)
+
+## Scheduled Scans 📧 **NEW!**
+
+Automate your accessibility testing with scheduled recurring scans:
+
+- **Recurring Scans**: Schedule daily, weekly, monthly, or yearly scans
+- **Email Notifications**: Get alerts when violations are detected
+- **Flexible Scheduling**: Set specific times and days for scans
+- **Customizable Alerts**: Choose to be notified on errors only or all violations
+- **Easy Setup**: Click "Schedule" on any scan in your history
+
+### Quick Start
+1. Complete a scan from the web interface
+2. Go to Scan History (`/history`)
+3. Click the "Schedule" button on any scan
+4. Configure frequency, time, and notification preferences
+5. Submit - your scan will now run automatically!
+
+📚 **Setup Guide**: See [QUICKSTART_SCHEDULED_SCANS.md](QUICKSTART_SCHEDULED_SCANS.md)  
+📖 **Full Documentation**: See [docs/SCHEDULED_SCANS.md](docs/SCHEDULED_SCANS.md)
+
+### Email Configuration (Optional)
+To receive email notifications, configure SMTP settings in your `.env` file:
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@example.com
+SMTP_PASSWORD=your-app-password
+SMTP_USE_TLS=true
+SMTP_FROM_EMAIL=noreply@your-domain.com
+SMTP_FROM_NAME=AODA Compliance Checker
+```
+
+Or add to `docker-compose.yml`:
+```yaml
+environment:
+  - SMTP_HOST=smtp.gmail.com
+  - SMTP_PORT=587
+  - SMTP_USERNAME=your-email@example.com
+  - SMTP_PASSWORD=your-app-password
+  - SMTP_USE_TLS=true
+  - SMTP_FROM_EMAIL=noreply@your-domain.com
+```
 
 ## Usage
 

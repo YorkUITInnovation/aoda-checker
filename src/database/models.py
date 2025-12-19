@@ -278,3 +278,96 @@ class UserCheckConfiguration(Base):
     def __repr__(self):
         return f"<UserCheckConfiguration(user_id={self.user_id}, check_id={self.check_id}, enabled={self.enabled})>"
 
+
+class ScheduleFrequency(str, enum.Enum):
+    """Frequency for scheduled scans."""
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
+
+
+class ScheduledScan(Base):
+    """Scheduled scan configuration."""
+    __tablename__ = "scheduled_scans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Scan configuration
+    start_url = Column(String(2048), nullable=False)
+    max_pages = Column(Integer, nullable=False, default=50)
+    max_depth = Column(Integer, nullable=False, default=3)
+    same_domain_only = Column(Integer, nullable=False, default=1)
+    # Note: Scheduled scans use user's check configuration from user_check_configurations table
+
+    # Schedule configuration
+    frequency = Column(Enum(ScheduleFrequency), nullable=False)
+    schedule_time = Column(String(5), nullable=False)  # HH:MM format (24-hour)
+    day_of_week = Column(Integer, nullable=True)  # 0=Monday, 6=Sunday (for weekly)
+    day_of_month = Column(Integer, nullable=True)  # 1-31 (for monthly)
+    month_of_year = Column(Integer, nullable=True)  # 1-12 (for yearly)
+
+    # Email notification settings
+    email_notifications = Column(Boolean, default=True, nullable=False)
+    notify_on_violations = Column(Boolean, default=True, nullable=False)
+    notify_on_errors = Column(Boolean, default=True, nullable=False)
+
+    # Status
+    is_active = Column(Boolean, default=True, nullable=False)
+    last_run = Column(DateTime, nullable=True)
+    next_run = Column(DateTime, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", backref="scheduled_scans")
+    logs = relationship("ScheduledScanLog", back_populates="scheduled_scan", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<ScheduledScan(id={self.id}, url={self.start_url}, frequency={self.frequency}, active={self.is_active})>"
+
+
+class ScheduledScanLogStatus(str, enum.Enum):
+    """Status of scheduled scan execution."""
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
+class ScheduledScanLog(Base):
+    """Log entry for scheduled scan execution."""
+    __tablename__ = "scheduled_scan_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    scheduled_scan_id = Column(Integer, ForeignKey("scheduled_scans.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Execution details
+    start_url = Column(String(2048), nullable=False)
+    status = Column(Enum(ScheduledScanLogStatus), nullable=False)
+
+    # Scan result
+    scan_id = Column(String(36), nullable=True)  # Reference to the actual scan created (if successful)
+    pages_scanned = Column(Integer, default=0)
+    total_violations = Column(Integer, default=0)
+
+    # Error information (if failed)
+    error_message = Column(Text, nullable=True)
+
+    # Execution time
+    executed_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+    duration_seconds = Column(Integer, nullable=True)  # How long the scan took
+
+    # Email notification status
+    email_sent = Column(Boolean, default=False, nullable=False)
+
+    # Relationships
+    scheduled_scan = relationship("ScheduledScan", back_populates="logs")
+    user = relationship("User", backref="scheduled_scan_logs")
+
+    def __repr__(self):
+        return f"<ScheduledScanLog(id={self.id}, url={self.start_url}, status={self.status}, executed_at={self.executed_at})>"
+
+
