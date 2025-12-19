@@ -154,11 +154,10 @@ class SchedulerService:
                 restrict_to_path=True
             )
 
-            # Run the scan (without user_id to prevent duplicate DB save in crawler)
-            # The crawler will save to DB during __init__ if user_id is provided,
-            # but we want to save only once after completion
-            logger.info(f"Starting scan for {scheduled_scan.start_url} (schedule {schedule_id}) using user check configuration")
-            crawler = AccessibilityCrawler(scan_request, user_id=None)
+            # Run the scan with user_id to load user's check configuration
+            # Set save_initial=False to prevent duplicate DB save (we save after completion)
+            logger.info(f"Starting scan for {scheduled_scan.start_url} (schedule {schedule_id}) using user {user_id} check configuration")
+            crawler = AccessibilityCrawler(scan_request, user_id=user_id, save_initial=False)
             scan_result = await crawler.crawl()
 
             logger.info(f"Scan completed: {scan_result.scan_id} with {scan_result.total_violations} violations")

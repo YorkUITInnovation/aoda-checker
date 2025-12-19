@@ -25,13 +25,14 @@ logger = logging.getLogger(__name__)
 class AccessibilityCrawler:
     """Crawler that tests web pages for accessibility compliance."""
 
-    def __init__(self, scan_request: ScanRequest, user_id: Optional[int] = None, resume_scan_id: Optional[str] = None):
+    def __init__(self, scan_request: ScanRequest, user_id: Optional[int] = None, resume_scan_id: Optional[str] = None, save_initial: bool = True):
         """Initialize the crawler with scan parameters.
 
         Args:
             scan_request: The scan request configuration
-            user_id: User ID for database operations
+            user_id: User ID for database operations and user-specific check configuration
             resume_scan_id: Optional scan_id to resume from last checkpoint
+            save_initial: Whether to save initial scan to database (default True)
         """
         self.start_url = str(scan_request.url)
         self.max_pages = scan_request.max_pages
@@ -58,6 +59,7 @@ class AccessibilityCrawler:
         self.last_checkpoint = 0  # Track when we last saved
         self.user_id = user_id  # Store user_id for checkpointing
         self.checkpoint_buffer: List[PageResult] = []  # Buffer for new results since last checkpoint
+        self.save_initial = save_initial  # Control initial DB save
 
         # Resume capability
         self.resume_scan_id = resume_scan_id  # Scan ID to resume from
@@ -107,21 +109,43 @@ class AccessibilityCrawler:
 
             async with get_db_session() as db:
                 repo = CheckConfigRepository(db)
-                enabled_checks = await repo.get_enabled_checks()
 
-                if enabled_checks:
-                    self.enabled_check_ids = {check.check_id for check in enabled_checks}
-                    # Build severity mapping
+                # Load user-specific checks if user_id provided, otherwise load global checks
+                if self.user_id:
+                    logger.info(f"Loading user-specific check configuration for user {self.user_id}")
+                    enabled_check_ids = await repo.get_enabled_checks_for_user(self.user_id)
+                    self.enabled_check_ids = set(enabled_check_ids) if enabled_check_ids else None
+
+                    # Get user checks with severity info
+                    user_checks = await repo.get_user_checks(self.user_id)
                     self.check_severity_map = {
-                        check.check_id: check.severity.value
-                        for check in enabled_checks
+                        check["check_id"]: check["severity"]
+                        for check in user_checks
+                        if check["enabled"]
                     }
-                    logger.info(f"Loaded {len(self.enabled_check_ids)} enabled checks from database")
-                    logger.debug(f"Enabled checks: {sorted(self.enabled_check_ids)}")
+
+                    if self.enabled_check_ids:
+                        logger.info(f"Loaded {len(self.enabled_check_ids)} enabled checks for user {self.user_id}")
+                        logger.debug(f"Enabled checks: {sorted(self.enabled_check_ids)}")
+                    else:
+                        logger.warning(f"No checks enabled for user {self.user_id} - all checks will run")
                 else:
-                    logger.warning("No check configurations found in database - all checks will run")
-                    self.enabled_check_ids = None
-                    self.check_severity_map = {}
+                    logger.info("Loading global (admin) check configuration")
+                    enabled_checks = await repo.get_enabled_checks()
+
+                    if enabled_checks:
+                        self.enabled_check_ids = {check.check_id for check in enabled_checks}
+                        # Build severity mapping
+                        self.check_severity_map = {
+                            check.check_id: check.severity.value
+                            for check in enabled_checks
+                        }
+                        logger.info(f"Loaded {len(self.enabled_check_ids)} enabled checks from global configuration")
+                        logger.debug(f"Enabled checks: {sorted(self.enabled_check_ids)}")
+                    else:
+                        logger.warning("No check configurations found in database - all checks will run")
+                        self.enabled_check_ids = None
+                        self.check_severity_map = {}
         except Exception as e:
             logger.warning(f"Could not load check configurations: {e}. All checks will run.")
             self.enabled_check_ids = None
@@ -135,8 +159,8 @@ class AccessibilityCrawler:
                 logger.warning("Failed to resume from checkpoint, starting fresh scan")
                 self.is_resuming = False
 
-        # Create initial scan record in database if user_id provided (and not resuming)
-        if self.user_id and not self.is_resuming:
+        # Create initial scan record in database if user_id provided (and not resuming) and save_initial is True
+        if self.user_id and not self.is_resuming and self.save_initial:
             try:
                 from src.database import get_db_session
                 from src.database.repository import ScanRepository
