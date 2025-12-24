@@ -113,7 +113,7 @@ Automate your accessibility testing with scheduled recurring scans:
 4. Configure frequency, time, and notification preferences
 5. Submit - your scan will now run automatically!
 
-📚 **Setup Guide**: See [QUICKSTART_SCHEDULED_SCANS.md](QUICKSTART_SCHEDULED_SCANS.md)  
+📚 **Setup Guide**: See [QUICKSTART_SCHEDULED_SCANS.md](docs/QUICKSTART_SCHEDULED_SCANS.md)  
 📖 **Full Documentation**: See [docs/SCHEDULED_SCANS.md](docs/SCHEDULED_SCANS.md)
 
 ### Email Configuration (Optional)

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Scans Guide - AODA Compliance Checker</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="/static/css/common.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    {% include 'includes/navbar.html' %}
+    {% include 'includes/sidebar.html' %}
+
+
+    <div class="container main-content">
+        <main id="main-content">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/help">Help</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Scheduled Scans</li>
+                </ol>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold">
+                        <i class="bi bi-calendar-event"></i> Scheduled Scans
+                    </h1>
+                    <p class="lead">Automate your accessibility testing with recurring scans and email notifications</p>
+                </div>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">On This Page</h2>
+                    <ul>
+                        <li><a href="#overview">What are Scheduled Scans?</a></li>
+                        <li><a href="#creating">Creating a Scheduled Scan</a></li>
+                        <li><a href="#managing">Managing Your Schedules</a></li>
+                        <li><a href="#logs">Viewing Scheduled Task Logs</a></li>
+                        <li><a href="#notifications">Email Notifications</a></li>
+                        <li><a href="#tips">Best Practices & Tips</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Overview -->
+            <section id="overview" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">What are Scheduled Scans?</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <p>Scheduled scans allow you to automatically run accessibility scans on a regular basis—daily, weekly, monthly, or yearly. This helps you:</p>
+                        <ul>
+                            <li><strong>Monitor continuously:</strong> Catch accessibility issues as soon as they appear</li>
+                            <li><strong>Save time:</strong> No need to manually run scans repeatedly</li>
+                            <li><strong>Stay informed:</strong> Receive email notifications when violations are found</li>
+                            <li><strong>Track changes:</strong> Review execution history to see trends over time</li>
+                        </ul>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> <strong>Important:</strong> Scheduled scans use your personal check configuration from "My Checks". Any changes you make to your check settings will apply to future scheduled scans.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Creating -->
+            <section id="creating" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Creating a Scheduled Scan</h2>
+
+                <h3 class="h5 mt-4">Step 1: Start from History</h3>
+                <p>The easiest way to schedule a scan is from a previous scan:</p>
+                <ol>
+                    <li>Go to the <strong>History</strong> page from the sidebar</li>
+                    <li>Find a scan you want to schedule</li>
+                    <li>Click the blue <strong>"Schedule"</strong> button (calendar icon)</li>
+                </ol>
+                <div class="alert alert-success">
+                    <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> The schedule form will automatically pre-fill with the scan's URL and settings, saving you time!
+                </div>
+
+                <h3 class="h5 mt-4">Step 2: Configure Scan Settings</h3>
+                <p>Review and adjust these settings as needed:</p>
+                <ul>
+                    <li><strong>URL:</strong> The website to scan (pre-filled from your selected scan)</li>
+                    <li><strong>Max Pages:</strong> How many pages to scan (1 to 10,000)</li>
+                    <li><strong>Max Depth:</strong> How deep to crawl from the starting page (1 to 10)</li>
+                    <li><strong>Same Domain Only:</strong> Whether to stay on the same domain</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Step 3: Set Your Schedule</h3>
+                <p>Choose when and how often the scan should run:</p>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong>Frequency Options</strong>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Daily:</strong> Runs every day at the specified time</li>
+                            <li><strong>Weekly:</strong> Runs once a week on the selected day (Monday through Sunday)</li>
+                            <li><strong>Monthly:</strong> Runs on a specific day of each month (1st through 31st)</li>
+                            <li><strong>Yearly:</strong> Runs once a year on a specific month and day</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3 bg-light">
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Setting the Time:</strong></p>
+                        <p class="mb-2">Use 24-hour format (HH:MM):</p>
+                        <ul class="mb-0">
+                            <li><code>02:00</code> = 2:00 AM</li>
+                            <li><code>14:00</code> = 2:00 PM</li>
+                            <li><code>23:30</code> = 11:30 PM</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="h5 mt-4">Step 4: Configure Email Notifications</h3>
+                <p>Control when you receive email notifications:</p>
+                <ul>
+                    <li><strong>Enable email notifications:</strong> Check this to receive emails</li>
+                    <li><strong>Notify on errors:</strong> Get notified when critical or serious violations are found</li>
+                    <li><strong>Notify on all violations:</strong> Get notified for any violations, including warnings</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Note:</strong> Make sure your email address is set in your profile to receive notifications. Check your spam folder if you don't receive emails.
+                </div>
+
+                <h3 class="h5 mt-4">Step 5: Submit</h3>
+                <p>Click <strong>"Schedule Scan"</strong> to create your schedule. You'll be redirected to the History page where your scan will now show a blue "Scheduled" badge.</p>
+            </section>
+
+            <!-- Managing -->
+            <section id="managing" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Managing Your Schedules</h2>
+
+                <h3 class="h5 mt-4">Identifying Scheduled Scans</h3>
+                <p>On the History page, scans with active schedules display:</p>
+                <ul>
+                    <li><span class="badge bg-primary">Scheduled</span> Blue badge next to the scan</li>
+                    <li><strong>"Manage"</strong> button to view and control the schedule</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Viewing Schedule Details</h3>
+                <ol>
+                    <li>Go to the <strong>History</strong> page</li>
+                    <li>Find a scan with the "Scheduled" badge</li>
+                    <li>Click the blue <strong>"Manage"</strong> button</li>
+                </ol>
+                <p>The modal will show:</p>
+                <ul>
+                    <li>The URL being scanned</li>
+                    <li>Frequency (Daily, Weekly, Monthly, or Yearly)</li>
+                    <li>Scheduled time</li>
+                    <li>Option to delete the schedule</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Deleting a Schedule</h3>
+                <p>To stop a scheduled scan:</p>
+                <ol>
+                    <li>Click <strong>"Manage"</strong> on the scheduled scan</li>
+                    <li>Click <strong>"Delete Schedule"</strong> in the modal</li>
+                    <li>Confirm the deletion</li>
+                </ol>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Important:</strong> Deleting a schedule only stops future scans. All past scan results remain in your history.
+                </div>
+
+                <h3 class="h5 mt-4">Updating a Schedule</h3>
+                <p>To change a schedule:</p>
+                <ol>
+                    <li>Delete the existing schedule</li>
+                    <li>Click "Schedule" on the scan again</li>
+                    <li>Set your new schedule settings</li>
+                    <li>Submit the updated schedule</li>
+                </ol>
+            </section>
+
+            <!-- Logs -->
+            <section id="logs" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Viewing Scheduled Task Logs</h2>
+
+                <h3 class="h5 mt-4">Accessing the Logs Page</h3>
+                <p>View the complete history of all your scheduled scan executions:</p>
+                <ol>
+                    <li>Click <strong>"Scheduled Task Logs"</strong> in the sidebar</li>
+                    <li>Or navigate directly to <code>/scheduled-logs</code></li>
+                </ol>
+
+                <h3 class="h5 mt-4">Understanding the Dashboard</h3>
+                <p>The logs page shows important statistics at the top:</p>
+                <ul>
+                    <li><strong>Total Executions:</strong> How many scheduled scans have run</li>
+                    <li><strong>Successful:</strong> Scans that completed without errors</li>
+                    <li><strong>Failed:</strong> Scans that encountered problems</li>
+                    <li><strong>Success Rate:</strong> Percentage of successful scans</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Filtering and Sorting Logs</h3>
+                <p>Find specific logs using these options:</p>
+                <ul>
+                    <li><strong>Status Filter:</strong> Show all, successful only, or failed only</li>
+                    <li><strong>Date Range:</strong> Filter by when the scan ran (From Date to To Date)</li>
+                    <li><strong>Sort By:</strong> Execution time, status, URL, or duration</li>
+                    <li><strong>Sort Order:</strong> Newest first or oldest first</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Understanding Log Entries</h3>
+                <p>Each log entry shows:</p>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <strong>Successful Scans</strong>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><span class="badge bg-success">SUCCESS</span> Status badge</li>
+                            <li>Number of pages scanned</li>
+                            <li>Total violations found</li>
+                            <li>Email sent indicator (if notification was sent)</li>
+                            <li>How long the scan took</li>
+                            <li><strong>"View Scan"</strong> button to see full results</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-danger text-white">
+                        <strong>Failed Scans</strong>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><span class="badge bg-danger">FAILED</span> Status badge</li>
+                            <li>Error message explaining what went wrong</li>
+                            <li>Duration before the failure occurred</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="h5 mt-4">Managing Logs</h3>
+                <p>Keep your log list organized:</p>
+                <ul>
+                    <li><strong>Delete individual logs:</strong> Click the "Delete" button on any log entry</li>
+                    <li><strong>Bulk delete:</strong> Check multiple logs and click "Delete Selected"</li>
+                    <li><strong>Select all:</strong> Use "Select All on This Page" checkbox</li>
+                </ul>
+                <div class="alert alert-success">
+                    <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> The logs page shows 50 entries per page. Use the pagination controls at the bottom to navigate through older logs.
+                </div>
+            </section>
+
+            <!-- Notifications -->
+            <section id="notifications" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Email Notifications</h2>
+
+                <h3 class="h5 mt-4">When You'll Receive Emails</h3>
+                <p>Based on your notification settings, you'll receive emails when:</p>
+                <ul>
+                    <li><strong>Errors are found:</strong> Critical or serious accessibility violations detected</li>
+                    <li><strong>Any violations are found:</strong> Errors, warnings, or any accessibility issues</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Note:</strong> You won't receive emails if you unchecked "Enable email notifications" when creating the schedule.
+                </div>
+
+                <h3 class="h5 mt-4">What's in the Email</h3>
+                <p>Notification emails include:</p>
+                <ul>
+                    <li>Personalized greeting with your first name</li>
+                    <li>The URL that was scanned</li>
+                    <li>Summary of violations found:
+                        <ul>
+                            <li>Total violations</li>
+                            <li>Number of errors</li>
+                            <li>Number of warnings</li>
+                            <li>Pages scanned</li>
+                        </ul>
+                    </li>
+                    <li><strong>"View Full Report"</strong> button that links directly to the scan results</li>
+                </ul>
+
+                <h3 class="h5 mt-4">Email Not Arriving?</h3>
+                <p>If you're not receiving email notifications:</p>
+                <ol>
+                    <li>Check your spam/junk folder</li>
+                    <li>Verify your email address is set in your user profile</li>
+                    <li>Confirm "Enable email notifications" was checked when creating the schedule</li>
+                    <li>Check the Scheduled Task Logs to see if the email was sent</li>
+                </ol>
+            </section>
+
+            <!-- Tips -->
+            <section id="tips" class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Best Practices & Tips</h2>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong><i class="bi bi-lightbulb"></i> Scheduling Tips</strong>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Choose off-peak times:</strong> Schedule scans during low-traffic hours (e.g., 2:00 AM) to minimize impact</li>
+                            <li><strong>Avoid overlapping scans:</strong> Don't schedule multiple scans at the same time</li>
+                            <li><strong>Start with weekly:</strong> Weekly scans are often a good balance between monitoring and resource usage</li>
+                            <li><strong>Set realistic page limits:</strong> Large sites (1000+ pages) can take time—adjust your max pages accordingly</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong><i class="bi bi-gear"></i> Check Configuration Tips</strong>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Configure "My Checks" first:</strong> Set up your check preferences before creating schedules</li>
+                            <li><strong>Test manually first:</strong> Run a manual scan to verify your check configuration works as expected</li>
+                            <li><strong>Remember it's personal:</strong> Your scheduled scans use YOUR check settings, not global defaults</li>
+                            <li><strong>Update when needed:</strong> Changes to "My Checks" will apply to future scheduled scans</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong><i class="bi bi-envelope"></i> Notification Tips</strong>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Start with "errors only":</strong> Reduce email volume by only getting notified about critical issues</li>
+                            <li><strong>Review logs regularly:</strong> Check the Scheduled Task Logs even if you don't receive emails</li>
+                            <li><strong>Whitelist the sender:</strong> Add the notification email to your contacts to prevent spam filtering</li>
+                            <li><strong>Disable if too many:</strong> Turn off notifications if you prefer to check results manually</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <strong><i class="bi bi-graph-up"></i> Monitoring Tips</strong>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li><strong>Check logs weekly:</strong> Review your scheduled task logs to spot trends</li>
+                            <li><strong>Compare results:</strong> Use the "View Scan" links to compare results over time</li>
+                            <li><strong>Clean up old logs:</strong> Delete old log entries to keep the list manageable</li>
+                            <li><strong>Watch success rate:</strong> A declining success rate may indicate site issues</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Related Topics -->
+            <section class="mb-5">
+                <h2 class="h3 border-bottom pb-2 mb-3">Related Help Topics</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h3 class="h5 card-title">
+                                    <i class="bi bi-search"></i> Running Scans
+                                </h3>
+                                <p class="card-text">Learn how to run manual accessibility scans</p>
+                                <a href="/help/scans" class="btn btn-sm btn-outline-primary">View Guide</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h3 class="h5 card-title">
+                                    <i class="bi bi-sliders"></i> My Checks
+                                </h3>
+                                <p class="card-text">Customize which accessibility checks are enabled</p>
+                                <a href="/help/checks" class="btn btn-sm btn-outline-primary">View Guide</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h3 class="h5 card-title">
+                                    <i class="bi bi-clock-history"></i> Scan History
+                                </h3>
+                                <p class="card-text">View and manage your past scans</p>
+                                <a href="/help/history" class="btn btn-sm btn-outline-primary">View Guide</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h3 class="h5 card-title">
+                                    <i class="bi bi-file-earmark-text"></i> Understanding Results
+                                </h3>
+                                <p class="card-text">Learn how to interpret scan results</p>
+                                <a href="/help/results" class="btn btn-sm btn-outline-primary">View Guide</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Back to Help -->
+            <div class="text-center mb-4">
+                <a href="/help" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Help Center
+                </a>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
