@@ -55,4 +55,4 @@ Thumbs.db
 # Playwright
 .playwright/
 
-/docs/
+docs/
