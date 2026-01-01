@@ -85,7 +85,8 @@ class UserRepository:
         id_number: Optional[str] = None,
         password: Optional[str] = None,
         is_admin: Optional[bool] = None,
-        is_active: Optional[bool] = None
+        is_active: Optional[bool] = None,
+        auth_method: Optional[str] = None
     ) -> Optional[User]:
         """Update a user's information."""
         user = await self.get_user_by_id(user_id)
@@ -109,7 +110,9 @@ class UserRepository:
             user.is_admin = is_admin
         if is_active is not None:
             user.is_active = is_active
-        
+        if auth_method is not None:
+            user.auth_method = auth_method
+
         user.updated_at = datetime.utcnow()
         
         await self.session.commit()

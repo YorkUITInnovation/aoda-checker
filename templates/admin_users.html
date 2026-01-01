@@ -141,7 +141,7 @@
                                 </td>
                                 <td class="text-end table-actions">
                                     {% if user.id != current_user.id %}
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editUser({{ user.id }}, '{{ user.username }}', '{{ user.email or '' }}', '{{ user.full_name or '' }}', {{ 'true' if user.is_admin else 'false' }}, {{ 'true' if user.is_active else 'false' }}, '{{ user.first_name or '' }}', '{{ user.last_name or '' }}', '{{ user.id_number or '' }}')">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editUser({{ user.id }}, '{{ user.username }}', '{{ user.email or '' }}', '{{ user.full_name or '' }}', {{ 'true' if user.is_admin else 'false' }}, {{ 'true' if user.is_active else 'false' }}, '{{ user.first_name or '' }}', '{{ user.last_name or '' }}', '{{ user.id_number or '' }}', '{{ user.auth_method }}')">
                                         <i class="bi bi-pencil-fill"></i> Edit
                                     </button>
                                     <form method="post" action="/admin/users/{{ user.id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
@@ -251,6 +251,14 @@
                             <label for="edit_id_number" class="form-label">ID Number</label>
                             <input type="text" class="form-control" id="edit_id_number" name="id_number">
                         </div>
+                        <div class="mb-3">
+                            <label for="edit_auth_method" class="form-label">Authentication Method</label>
+                            <select class="form-select" id="edit_auth_method" name="auth_method">
+                                <option value="manual">Manual (Username/Password)</option>
+                                <option value="saml">SAML2 SSO</option>
+                            </select>
+                            <small class="form-text text-muted">SAML users don't need a password</small>
+                        </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="edit_is_admin" name="is_admin" value="true">
                             <label class="form-check-label" for="edit_is_admin">
@@ -275,7 +283,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function editUser(id, username, email, fullName, isAdmin, isActive, firstName, lastName, idNumber) {
+        function editUser(id, username, email, fullName, isAdmin, isActive, firstName, lastName, idNumber, authMethod) {
             document.getElementById('editUserForm').action = `/admin/users/${id}/edit`;
             document.getElementById('edit_username').value = username;
             document.getElementById('edit_email').value = email || '';
@@ -285,6 +293,7 @@
             document.getElementById('edit_is_admin').checked = isAdmin;
             document.getElementById('edit_is_active').checked = isActive;
             document.getElementById('edit_password').value = '';
+            document.getElementById('edit_auth_method').value = authMethod || 'manual';
 
             new bootstrap.Modal(document.getElementById('editUserModal')).show();
         }

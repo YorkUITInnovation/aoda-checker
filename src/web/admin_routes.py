@@ -36,6 +36,7 @@ class UpdateUserRequest(BaseModel):
     password: Optional[str] = None
     is_admin: Optional[bool] = None
     is_active: Optional[bool] = None
+    auth_method: Optional[str] = None
 
 
 @router.get("/users", response_class=HTMLResponse)
@@ -220,6 +221,7 @@ async def edit_user_form(
     password: Optional[str] = Form(None),
     is_admin: bool = Form(False),
     is_active: bool = Form(True),
+    auth_method: str = Form("manual"),
     current_user: User = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -264,7 +266,8 @@ async def edit_user_form(
         id_number=id_number if id_number else None,
         password=password if password else None,
         is_admin=is_admin,
-        is_active=is_active
+        is_active=is_active,
+        auth_method=auth_method
     )
     
     if not updated_user:
@@ -307,7 +310,8 @@ async def update_user_api(
         id_number=user_request.id_number,
         password=user_request.password,
         is_admin=user_request.is_admin,
-        is_active=user_request.is_active
+        is_active=user_request.is_active,
+        auth_method=user_request.auth_method
     )
     
     if not updated_user:
@@ -322,7 +326,8 @@ async def update_user_api(
         "id_number": updated_user.id_number,
         "full_name": updated_user.full_name,
         "is_admin": updated_user.is_admin,
-        "is_active": updated_user.is_active
+        "is_active": updated_user.is_active,
+        "auth_method": updated_user.auth_method
     }
 
 

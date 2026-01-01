@@ -371,3 +371,44 @@ class ScheduledScanLog(Base):
         return f"<ScheduledScanLog(id={self.id}, url={self.start_url}, status={self.status}, executed_at={self.executed_at})>"
 
 
+class SAMLConfiguration(Base):
+    """SAML2 authentication configuration."""
+    __tablename__ = "saml_configurations"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # SAML enabled status
+    enabled = Column(Boolean, default=False, nullable=False)
+
+    # Service Provider (SP) Configuration
+    sp_entity_id = Column(String(512), nullable=True)
+    sp_acs_url = Column(String(512), nullable=True)  # Assertion Consumer Service URL
+    sp_sls_url = Column(String(512), nullable=True)  # Single Logout Service URL
+
+    # Identity Provider (IdP) Configuration
+    idp_entity_id = Column(String(512), nullable=True)
+    idp_sso_url = Column(String(512), nullable=True)  # Single Sign-On URL
+    idp_sls_url = Column(String(512), nullable=True)  # Single Logout Service URL
+    idp_x509_cert = Column(Text, nullable=True)  # IdP X.509 Certificate
+
+    # Organization Information (for metadata)
+    org_name = Column(String(255), nullable=True)
+    org_display_name = Column(String(255), nullable=True)
+    org_url = Column(String(512), nullable=True)
+    technical_contact_email = Column(String(255), nullable=True)
+
+    # Attribute Mapping (SAML attributes to user fields)
+    # Stored as JSON: {"saml_attribute": "user_field", ...}
+    # Example: {"email": "email", "givenName": "first_name", "sn": "last_name", "employeeNumber": "id_number"}
+    attribute_mapping = Column(JSON, nullable=True)
+
+    # Auto-provisioning settings
+    auto_provision_users = Column(Boolean, default=False, nullable=False)
+    default_user_role_is_admin = Column(Boolean, default=False, nullable=False)
+
+    # Timestamps
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<SAMLConfiguration(id={self.id}, enabled={self.enabled}, sp_entity_id={self.sp_entity_id})>"

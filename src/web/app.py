@@ -149,6 +149,14 @@ app.include_router(check_config_router)
 from src.web.scheduled_log_routes import router as scheduled_log_router
 app.include_router(scheduled_log_router)
 
+# Register SAML routes
+from src.web.saml_routes import router as saml_router
+app.include_router(saml_router)
+
+# Register SAML admin routes
+from src.web.saml_admin_routes import router as saml_admin_router
+app.include_router(saml_admin_router)
+
 
 # Admin Test Email API Route (registered at app level for correct path)
 from pydantic import BaseModel as PydanticBaseModel

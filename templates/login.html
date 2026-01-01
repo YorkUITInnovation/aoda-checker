@@ -71,7 +71,20 @@
             {% if error %}
             <div class="alert alert-danger" role="alert" id="loginError" aria-live="assertive">
                 <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
-                <strong>Error:</strong> {{ error }}
+                <strong>Error:</strong>
+                {% if error == 'saml_not_configured' %}
+                    SAML authentication is not configured. Please contact your administrator.
+                {% elif error == 'saml_auth_failed' %}
+                    SAML authentication failed. Please try again or contact your administrator.
+                {% elif error == 'account_not_created' %}
+                    Your account has not been created. Please contact the administrator to set up your account.
+                {% elif error == 'account_inactive' %}
+                    Your account has been deactivated. Please contact the administrator.
+                {% elif error == 'saml_error' %}
+                    A SAML authentication error occurred. Please try again or contact your administrator.
+                {% else %}
+                    {{ error }}
+                {% endif %}
             </div>
             {% endif %}
 
@@ -103,6 +116,19 @@
                     <span aria-hidden="true">Sign In</span>
                 </button>
             </form>
+
+            <!-- SAML Login Option -->
+            <div class="text-center mt-4">
+                <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1">
+                    <span class="px-3 text-muted small">OR</span>
+                    <hr class="flex-grow-1">
+                </div>
+                <a href="/saml/login?next={{ next if next else '/' }}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-building" aria-hidden="true"></i>
+                    Sign in with SSO
+                </a>
+            </div>
         </div>
     </div>
 

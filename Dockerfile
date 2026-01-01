@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     tzdata \
+    pkg-config \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libxmlsec1-openssl \
     && add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
     && apt-get install -y \

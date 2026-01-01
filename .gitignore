@@ -55,4 +55,8 @@ Thumbs.db
 # Playwright
 .playwright/
 
+# SAML Certificates
+saml_certs/
+
 docs/
+/stub/
