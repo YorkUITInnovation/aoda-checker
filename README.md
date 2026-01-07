@@ -1,6 +1,16 @@
 # AODA Compliance Checker
 
+**Version 1.1.0** - Includes automated database upgrade system
+
 An automated AODA/WCAG AA compliance checker that crawls websites and generates accessibility reports with user authentication, scheduled scans, and email notifications.
+
+## What's New in v1.1.0
+
+🎉 **Automated Database Upgrade System** - Database schema changes now apply automatically when an admin logs in. No more manual migration scripts!
+
+🔐 **SAML validUntil Field** - Configure expiration dates for SAML SP metadata (default: 10 years).
+
+See `RELEASE_NOTES_v1.1.0.md` for complete details.
 
 ## Quick Start
 
@@ -171,6 +181,94 @@ TIMEOUT=20000               # Page load timeout (ms)
 ENABLE_SCREENSHOTS=false    # Enable page screenshots (impacts performance)
 ```
 
+## Upgrading to a New Version
+
+The application includes an automated database upgrade system starting from v1.1.0. Upgrades are applied automatically when an administrator logs in.
+
+### First Time Setup (Upgrading from v1.0.0 to v1.1.0+)
+
+If you're upgrading from version 1.0.0, you need to initialize the upgrade system once:
+
+```bash
+# 1. Update the code
+git pull  # or deploy new code
+
+# 2. Install new dependencies
+pip install packaging==23.2
+
+# 3. For Docker installations, rebuild:
+docker compose down
+docker compose build
+docker compose up -d
+
+# 4. Initialize version tracking (one-time only)
+docker compose exec aoda-checker python scripts/init_app_version.py
+# OR for local installations:
+python scripts/init_app_version.py
+
+# 5. Log in as an administrator
+# The upgrade will run automatically!
+```
+
+### Future Upgrades (v1.1.0+)
+
+After the initial setup, future upgrades are automatic:
+
+```bash
+# 1. Update the code
+git pull
+
+# 2. Rebuild (Docker only)
+docker compose down
+docker compose build
+docker compose up -d
+
+# 3. Log in as administrator
+# All database upgrades run automatically!
+```
+
+### Verify Upgrade Success
+
+Check if upgrades were applied:
+
+```sql
+-- Connect to MySQL
+docker exec -it aoda-mysql mysql -u aoda_user -paoda_password aoda_checker
+
+-- Check current version
+SELECT version, description, applied_at 
+FROM app_version 
+ORDER BY applied_at DESC 
+LIMIT 1;
+
+-- View upgrade history
+SELECT * FROM app_version ORDER BY applied_at DESC;
+```
+
+### Upgrade System Features
+
+✅ **Automatic** - Runs on admin login, no manual steps  
+✅ **Safe** - Each upgrade runs in a transaction with rollback on error  
+✅ **Idempotent** - Can be run multiple times without issues  
+✅ **Logged** - All upgrade activity is logged  
+✅ **Non-blocking** - Login succeeds even if upgrade fails  
+
+### Troubleshooting Upgrades
+
+**Upgrade didn't run:**
+- Ensure you logged in as an **admin** user (not a regular user)
+- Check application logs: `docker compose logs -f aoda-checker`
+- Verify app version in code matches database version
+
+**Version table missing:**
+```bash
+python scripts/init_app_version.py
+```
+
+**Want to see upgrade details:**
+- Check `DATABASE_UPGRADE_SYSTEM.md` for complete documentation
+- Check `UPGRADE_SYSTEM_QUICK_REFERENCE.md` for quick reference
+
 ## Accessing the Application
 
 After starting the services:
@@ -256,6 +354,12 @@ docker compose up -d
 # Fix permissions on reports directory
 chmod -R 777 reports/
 ```
+
+### Database upgrade issues
+- Upgrades only run when an **admin** user logs in
+- Check logs: `docker compose logs -f aoda-checker`
+- Verify version: `SELECT * FROM app_version ORDER BY applied_at DESC LIMIT 1;`
+- For more help, see the "Upgrading to a New Version" section above
 
 ## Backup and Restore
 

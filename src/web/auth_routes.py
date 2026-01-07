@@ -5,15 +5,20 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
+import logging
 
 from src.database import get_db
 from src.database.user_repository import UserRepository
 from src.web.dependencies import authenticate_user, get_current_user, get_current_active_user
 from src.utils.auth import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from src.database.models import User
+from src.database.upgrade_runner import check_and_run_upgrades
+from src.config import Settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+logger = logging.getLogger(__name__)
+settings = Settings()
 
 
 class LoginRequest(BaseModel):
@@ -72,6 +77,26 @@ async def login(
     request.session['username'] = user.username
     request.session['is_admin'] = user.is_admin
     
+    # If admin user, check and run database upgrades
+    if user.is_admin:
+        try:
+            logger.info(f"Admin user {user.username} logged in, checking for database upgrades...")
+            upgrade_result = await check_and_run_upgrades(db, settings.app_version)
+
+            if upgrade_result['upgrades_applied'] > 0:
+                logger.info(f"Applied {upgrade_result['upgrades_applied']} database upgrade(s)")
+                # Store upgrade notification in session
+                request.session['upgrade_notification'] = {
+                    'count': upgrade_result['upgrades_applied'],
+                    'version': upgrade_result['target_version']
+                }
+            elif not upgrade_result['success']:
+                logger.error(f"Database upgrade failed: {upgrade_result.get('errors', [])}")
+                # Don't block login, but log the error
+        except Exception as e:
+            logger.error(f"Error during database upgrade check: {str(e)}")
+            # Don't block login on upgrade failure
+
     # Redirect to the next page or home
     redirect_url = next if next and next.startswith('/') else "/"
     return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
@@ -96,6 +121,20 @@ async def api_login(
     user_repo = UserRepository(db)
     await user_repo.update_last_login(user.id)
     
+    # If admin user, check and run database upgrades
+    if user.is_admin:
+        try:
+            logger.info(f"Admin user {user.username} logged in via API, checking for database upgrades...")
+            upgrade_result = await check_and_run_upgrades(db, settings.app_version)
+
+            if upgrade_result['upgrades_applied'] > 0:
+                logger.info(f"Applied {upgrade_result['upgrades_applied']} database upgrade(s)")
+            elif not upgrade_result['success']:
+                logger.error(f"Database upgrade failed: {upgrade_result.get('errors', [])}")
+        except Exception as e:
+            logger.error(f"Error during database upgrade check: {str(e)}")
+            # Don't block login on upgrade failure
+
     # Create access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(

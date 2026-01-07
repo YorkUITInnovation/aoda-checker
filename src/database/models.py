@@ -413,3 +413,17 @@ class SAMLConfiguration(Base):
 
     def __repr__(self):
         return f"<SAMLConfiguration(id={self.id}, enabled={self.enabled}, sp_entity_id={self.sp_entity_id})>"
+
+
+class AppVersion(Base):
+    """Application version tracking for database upgrades."""
+    __tablename__ = "app_version"
+
+    id = Column(Integer, primary_key=True, index=True)
+    version = Column(String(20), nullable=False, unique=True, index=True)
+    description = Column(String(255), nullable=True)
+    applied_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<AppVersion(version={self.version}, applied_at={self.applied_at})>"
+

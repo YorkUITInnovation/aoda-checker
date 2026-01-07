@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     # Application
     app_name: str = "AODA Compliance Checker"
-    app_version: str = "1.0.0"
+    app_version: str = "1.1.0"  # Updated for SAML validUntil feature
     wwwroot: str = ""  # Alternative name for app_url (WWWROOT env var)
     app_url: str = "http://localhost:8080"  # Public URL for email links (configurable via APP_URL or WWWROOT env var)
 
