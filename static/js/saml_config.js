@@ -141,6 +141,16 @@ document.getElementById('saml-config-form').addEventListener('submit', async fun
     formData.append('sp_entity_id', document.getElementById('sp_entity_id').value);
     formData.append('sp_acs_url', document.getElementById('sp_acs_url').value);
     formData.append('sp_sls_url', document.getElementById('sp_sls_url').value);
+
+    // Convert datetime-local to ISO format for sp_valid_until
+    const validUntilInput = document.getElementById('sp_valid_until').value;
+    if (validUntilInput) {
+        const validUntilDate = new Date(validUntilInput);
+        formData.append('sp_valid_until', validUntilDate.toISOString());
+    } else {
+        formData.append('sp_valid_until', '');
+    }
+
     formData.append('idp_entity_id', document.getElementById('idp_entity_id').value);
     formData.append('idp_sso_url', document.getElementById('idp_sso_url').value);
     formData.append('idp_sls_url', document.getElementById('idp_sls_url').value);

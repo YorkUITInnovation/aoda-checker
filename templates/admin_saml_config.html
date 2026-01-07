@@ -180,6 +180,13 @@
                         <div class="help-text">URL for handling logout requests</div>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Metadata Valid Until:</label>
+                        <input type="datetime-local" class="form-control" name="sp_valid_until" id="sp_valid_until"
+                               value="{{ config.sp_valid_until[:16] if config.sp_valid_until else '2036-01-07T00:00' }}">
+                        <div class="help-text">Date when the SP metadata expires (default: 10 years from now). Will be used in the metadata.xml validUntil attribute.</div>
+                    </div>
+
                     <div class="mt-3">
                         <a href="/api/admin/saml-download-metadata" class="btn btn-success" id="download-metadata-btn">
                             <i class="bi bi-download"></i> Download Metadata.xml

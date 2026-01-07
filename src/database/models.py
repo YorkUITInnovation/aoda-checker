@@ -384,6 +384,7 @@ class SAMLConfiguration(Base):
     sp_entity_id = Column(String(512), nullable=True)
     sp_acs_url = Column(String(512), nullable=True)  # Assertion Consumer Service URL
     sp_sls_url = Column(String(512), nullable=True)  # Single Logout Service URL
+    sp_valid_until = Column(String(50), nullable=True)  # Metadata validity period in ISO format
 
     # Identity Provider (IdP) Configuration
     idp_entity_id = Column(String(512), nullable=True)

@@ -46,6 +46,7 @@ class SAMLConfigRepository:
         sp_entity_id: Optional[str] = None,
         sp_acs_url: Optional[str] = None,
         sp_sls_url: Optional[str] = None,
+        sp_valid_until: Optional[str] = None,
         idp_entity_id: Optional[str] = None,
         idp_sso_url: Optional[str] = None,
         idp_sls_url: Optional[str] = None,
@@ -65,6 +66,7 @@ class SAMLConfigRepository:
             sp_entity_id: Service Provider Entity ID
             sp_acs_url: Assertion Consumer Service URL
             sp_sls_url: Single Logout Service URL
+            sp_valid_until: Metadata validity period in ISO format
             idp_entity_id: Identity Provider Entity ID
             idp_sso_url: Identity Provider SSO URL
             idp_sls_url: Identity Provider SLS URL
@@ -90,6 +92,8 @@ class SAMLConfigRepository:
             config.sp_acs_url = sp_acs_url
         if sp_sls_url is not None:
             config.sp_sls_url = sp_sls_url
+        if sp_valid_until is not None:
+            config.sp_valid_until = sp_valid_until
         if idp_entity_id is not None:
             config.idp_entity_id = idp_entity_id
         if idp_sso_url is not None:
@@ -133,6 +137,7 @@ class SAMLConfigRepository:
             'sp_entity_id': config.sp_entity_id or '',
             'sp_acs_url': config.sp_acs_url or '',
             'sp_sls_url': config.sp_sls_url or '',
+            'sp_valid_until': config.sp_valid_until or '',
             'idp_entity_id': config.idp_entity_id or '',
             'idp_sso_url': config.idp_sso_url or '',
             'idp_sls_url': config.idp_sls_url or '',

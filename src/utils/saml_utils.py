@@ -231,6 +231,26 @@ def generate_metadata(config: Dict) -> bytes:
     settings = OneLogin_Saml2_Settings(settings_dict)
     metadata = settings.get_sp_metadata()
 
+    # Add validUntil attribute if configured
+    valid_until = config.get('sp_valid_until')
+    if valid_until:
+        try:
+            # Parse the metadata XML
+            root = etree.fromstring(metadata)
+
+            # Add validUntil attribute to EntityDescriptor
+            # Note: The root element should be EntityDescriptor
+            if root.tag.endswith('EntityDescriptor'):
+                root.set('validUntil', valid_until)
+
+            # Serialize back to bytes
+            metadata = etree.tostring(root, encoding='utf-8', xml_declaration=True, pretty_print=True)
+        except Exception as e:
+            # If there's any issue, log it but continue with original metadata
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to add validUntil attribute to metadata: {str(e)}")
+
     return metadata
 
 
